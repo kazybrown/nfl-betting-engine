@@ -155,7 +155,14 @@ def main() -> None:
     args = ap.parse_args()
 
     engine = BattleRoyaleEngine.from_csv(args.csv, seed=args.seed)
+    # Offline generation: fast rollout counts, but full-size outcome sims and
+    # fields — the jackpot region is too noisy under the live-draft preset,
+    # and the heavy artifacts are disk-cached anyway.
     cfg = OptimizerConfig.fast()
+    cfg.n_outcome_sims = 2500
+    cfg.eval_field_entries = 3600
+    cfg.dup_field_entries = 24_000
+    cfg.n_rollouts = 60
     cfg.seed = args.seed
     cfg.cache_dir = str(DEFAULT_CACHE_DIR)
     opt = PickOptimizer(engine, TournamentModel(contest_size=args.contest_size), cfg)
