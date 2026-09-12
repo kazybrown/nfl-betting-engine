@@ -18,7 +18,7 @@ from .constants import (
 from .slate import Slate
 
 
-@dataclass
+@dataclass(eq=False)
 class DraftState:
     """Mutable room state. ``next_pick`` is the overall pick about to be made."""
 

@@ -85,6 +85,7 @@ class PickOptimizer:
         self._dup_analytics: FieldAnalytics | None = None
         self._values: np.ndarray | None = None
         self._cov: np.ndarray | None = None
+        self._scores_cache: np.ndarray | None = None
 
     # ------------------------------------------------------------------
     # Cached slate-level artifacts
@@ -121,6 +122,14 @@ class PickOptimizer:
         if self._analytics is None:
             self._analytics = FieldAnalytics(self.slate, self.field)
         return self._analytics
+
+    def _outcome_scores(self) -> np.ndarray:
+        """Outcome sims shared by every recommend() call (fixed seed, cached)."""
+        if getattr(self, "_scores_cache", None) is None:
+            self._scores_cache = self.engine.sample_scores(
+                self.config.n_outcome_sims, np.random.default_rng(self.config.seed + 999)
+            )
+        return self._scores_cache
 
     @property
     def dup_analytics(self) -> FieldAnalytics:
@@ -181,11 +190,18 @@ class PickOptimizer:
         if len(legal) == 0:
             return []
         chosen: list[int] = []
-        # Per-position value floor keeps cross-position comparisons honest.
+        # Per-position value floors, interleaved by depth (best of each
+        # position first) so a small k still compares across positions
+        # instead of truncating the later-listed positions away.
+        floors: list[list[int]] = []
         for pos_idx in range(len(POSITIONS)):
             at_pos = legal[self.slate.pos[legal] == pos_idx]
             top = at_pos[np.argsort(-self.values[at_pos])][: self.config.per_position_floor]
-            chosen.extend(int(x) for x in top)
+            floors.append([int(x) for x in top])
+        for depth in range(self.config.per_position_floor):
+            for pos_floors in floors:
+                if depth < len(pos_floors):
+                    chosen.append(pos_floors[depth])
         # Market-adjacent players the room is about to consider.
         near_market = legal[np.argsort(self.slate.adp[legal])][:3]
         chosen.extend(int(x) for x in near_market)
@@ -223,15 +239,18 @@ class PickOptimizer:
         if not actions:
             raise ValueError("no legal candidates")
 
-        rollout_rng = np.random.default_rng(cfg.seed + 100 + pick)
+        latent_rng = np.random.default_rng(cfg.seed + 100 + pick)
         # Common random numbers: one latent room per rollout, shared by every
-        # action so equity differences come from the action, not the draw.
+        # action, and one fresh utility-noise stream PER (rollout) reused for
+        # every action, so equity differences come from the action, not the
+        # draw. (Streams diverge once actions change pool sizes, but early
+        # picks stay matched.)
         latents = []
         for _ in range(cfg.n_rollouts):
             latents.append(
                 (
-                    self.engine.policy.room_params(rollout_rng),
-                    self.engine.policy.latent_market(rollout_rng),
+                    self.engine.policy.room_params(latent_rng),
+                    self.engine.policy.latent_market(latent_rng),
                 )
             )
 
@@ -241,7 +260,10 @@ class PickOptimizer:
             for c in action:
                 base.apply_pick(int(c))
             for r_idx, (params, times) in enumerate(latents):
-                roster = self._rollout(base, seat, params, times, rollout_rng)
+                noise_rng = np.random.default_rng(
+                    (cfg.seed, state.next_pick, r_idx)
+                )
+                roster = self._rollout(base, seat, params, times, noise_rng)
                 completed[a_idx, r_idx] = roster
 
         # Deduplicate rosters before the (expensive) equity evaluation.
@@ -250,9 +272,7 @@ class PickOptimizer:
         uniq, inverse = np.unique(keys, axis=0, return_inverse=True)
         dup_ref = self.dup_analytics
         dup_counts = dup_ref.roster_copies(uniq)
-        scores = self.engine.sample_scores(
-            cfg.n_outcome_sims, np.random.default_rng(cfg.seed + 999)
-        )
+        scores = self._outcome_scores()
         metrics = self.tournament.evaluate_rosters(
             scores,
             self.field,

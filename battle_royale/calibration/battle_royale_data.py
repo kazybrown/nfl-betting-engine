@@ -130,7 +130,8 @@ def _slate_from_week(d: pd.DataFrame) -> tuple[Slate, dict]:
     agg = agg.sort_values("adp").reset_index(drop=True)
     players = []
     for i, r in agg.iterrows():
-        adp = float(r["adp"]) if r["adp"] and r["adp"] > 0 else 60.0
+        adp_raw = r["adp"]
+        adp = float(adp_raw) if pd.notna(adp_raw) and float(adp_raw) > 0 else 60.0
         players.append(
             Player(
                 name=f"{r['name']} #{i}",  # disambiguate duplicate display names

@@ -125,8 +125,7 @@ def walk_forward(
         corr = fit_relationships(collect_pairs(standardize(train)))
         ztrain = standardize(train)
         thresholds = ztrain.groupby("position")["z"].quantile(tail_q).to_dict()
-        ztest = standardize(test)  # standardization scale from test is fine for exceedance
-        # use train scale for test z to stay strictly out-of-sample:
+        # Use train scale for test z to stay strictly out-of-sample.
         scale = ztrain.groupby("position")["resid"].std().to_dict()
         ztest = test.copy()
         ztest["resid"] = ztest["points"] - ztest["anchor"]

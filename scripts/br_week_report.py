@@ -7,6 +7,11 @@ Usage:
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path as _Path
+
+sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))  # repo root
+
 import argparse
 import json
 from pathlib import Path
@@ -75,7 +80,7 @@ def field_score_distribution(engine, field, n_sims: int, seed: int) -> dict:
     out["sample_max_mean"] = float(mx.mean())
     out["sample_max_p10"] = float(np.quantile(mx, 0.10))
     out["sample_max_p90"] = float(np.quantile(mx, 0.90))
-    out["sample_entries"] = int(len(field))
+    out["sample_entries"] = len(field)
     return out
 
 

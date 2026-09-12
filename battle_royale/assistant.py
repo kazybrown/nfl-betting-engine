@@ -97,6 +97,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--contest-size", type=int, default=70_000)
     ap.add_argument("--seed", type=int, default=20260912)
     args = ap.parse_args(argv)
+    if not 0 <= args.seat <= 5:
+        ap.error("--seat must be 0-5 (your pick order minus one)")
 
     engine = BattleRoyaleEngine.from_csv(args.csv, seed=args.seed)
     config = OptimizerConfig.fast() if args.fast else OptimizerConfig()
@@ -109,8 +111,11 @@ def main(argv: list[str] | None = None) -> int:
     history_idxs: list[int] = []
     if args.history.strip():
         for name in args.history.split(","):
-            idx = match_player(engine.slate, name)
-            state.apply_pick(idx)
+            try:
+                idx = match_player(engine.slate, name)
+                state.apply_pick(idx)
+            except (KeyError, ValueError) as e:
+                ap.error(f"--history: {e}")
             history_idxs.append(idx)
 
     if not args.interactive:
@@ -161,19 +166,21 @@ def main(argv: list[str] | None = None) -> int:
         elif cmd == "rec":
             print(format_options(optimizer.recommend(state)))
         elif cmd.startswith("p "):
+            recorded = False
             try:
                 idx = match_player(engine.slate, cmd[2:])
                 state.apply_pick(idx)
                 undo_stack.append(idx)
+                recorded = True
                 p = engine.slate.players[idx]
                 print(f"  recorded: {p.name} ({p.position}) to seat {on_clock}")
             except (KeyError, ValueError) as e:
                 print(f"  error: {e}")
+            if recorded and not state.complete and state.seat_on_clock() == args.seat:
+                print("\nYOU are on the clock — computing recommendations...\n")
+                print(format_options(optimizer.recommend(state)))
         else:
             print("commands: p <name> | rec | board | roster | undo | q")
-        if not state.complete and state.seat_on_clock() == args.seat and cmd.startswith("p "):
-            print("\nYOU are on the clock — computing recommendations...\n")
-            print(format_options(optimizer.recommend(state)))
     print("done")
     return 0
 
