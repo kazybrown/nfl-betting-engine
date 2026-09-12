@@ -27,6 +27,7 @@ from battle_royale import (
     TournamentModel,
 )
 from battle_royale.constants import SEATS, TOTAL_PICKS, picks_of_seat
+from battle_royale.equity import load_payout_table
 from battle_royale.field import positional_construction
 
 
@@ -137,6 +138,8 @@ def main() -> None:
     ap.add_argument("--csv", required=True)
     ap.add_argument("--out", default="reports/battle_royale")
     ap.add_argument("--contest-size", type=int, default=70_000)
+    ap.add_argument("--payouts", default=None,
+                    help="prize-table JSON path (default: packaged real table if present)")
     ap.add_argument("--fast", action="store_true")
     ap.add_argument("--guided-drafts", action="store_true")
     ap.add_argument("--survival-rooms", type=int, default=2500)
@@ -149,11 +152,15 @@ def main() -> None:
     engine = BattleRoyaleEngine.from_csv(args.csv, seed=args.seed)
     config = OptimizerConfig.fast() if args.fast else OptimizerConfig()
     config.seed = args.seed
-    optimizer = PickOptimizer(engine, TournamentModel(contest_size=args.contest_size), config)
+    curve, pay_meta = load_payout_table(args.payouts)
+    optimizer = PickOptimizer(
+        engine, TournamentModel(contest_size=args.contest_size, curve=curve), config
+    )
 
     report: dict = {
         "slate_players": engine.slate.n,
         "contest_size": args.contest_size,
+        "payouts": pay_meta.get("contest", pay_meta["source"]),
         "marginal_table": engine.marginals.table_source,
         "correlation_table": engine.correlation.table_source,
     }

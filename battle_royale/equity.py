@@ -19,7 +19,11 @@ contest structure when known.
 
 from __future__ import annotations
 
+import itertools
+import json
 from dataclasses import dataclass, field
+from importlib import resources
+from pathlib import Path
 
 import numpy as np
 from scipy.stats import beta as beta_dist
@@ -46,6 +50,37 @@ class PayoutCurve:
         default_factory=lambda: list(DEFAULT_CURVE_POINTS)
     )
 
+    @classmethod
+    def from_prize_table(cls, tiers, entry_fee: float) -> PayoutCurve:
+        """Build a curve from a real contest prize table.
+
+        ``tiers`` is an iterable of ``{"rank_from", "rank_to", "prize_usd"}``
+        dicts (or (rank_from, rank_to, prize_usd) tuples): the per-entry prize
+        for each contiguous rank band, starting at rank 1. Prizes convert to
+        entry-fee multiples, the unit every equity number downstream uses.
+        """
+        if entry_fee <= 0:
+            raise ValueError("entry_fee must be positive")
+        rows = []
+        for t in tiers:
+            if isinstance(t, dict):
+                rows.append((int(t["rank_from"]), int(t["rank_to"]), float(t["prize_usd"])))
+            else:
+                lo, hi, prize = t
+                rows.append((int(lo), int(hi), float(prize)))
+        if not rows:
+            raise ValueError("empty prize table")
+        rows.sort()
+        if rows[0][0] != 1:
+            raise ValueError("prize table must start at rank 1")
+        for (_, prev_hi, _), (lo, hi, prize) in itertools.pairwise(rows):
+            if lo != prev_hi + 1:
+                raise ValueError(f"prize table bands not contiguous at rank {lo}")
+        for lo, hi, prize in rows:
+            if hi < lo or prize <= 0:
+                raise ValueError(f"bad prize band ({lo}, {hi}, {prize})")
+        return cls(points=[(float(hi), prize / entry_fee) for _, hi, prize in rows])
+
     def resolve(self, contest_size: int) -> tuple[np.ndarray, np.ndarray]:
         """Absolute-rank cutoffs and payouts, sorted by rank.
 
@@ -60,6 +95,31 @@ class PayoutCurve:
         ranks = np.array([c[0] for c in cutoffs])
         pays = np.array([c[1] for c in cutoffs])
         return ranks, pays
+
+
+def load_payout_table(path: str | Path | None = None) -> tuple[PayoutCurve, dict]:
+    """Real contest payout curve plus its metadata, with a safe fallback.
+
+    Reads ``battle_royale/data/payouts.json`` (or an explicit ``path``): a
+    dict with ``entry_fee_usd`` and ``tiers`` (rank_from/rank_to/prize_usd
+    bands), plus provenance fields echoed back in the metadata. When no table
+    is available the generic placeholder curve is returned with
+    ``meta["source"] == "placeholder"`` so callers can say which one is live.
+    """
+    if path is not None:
+        raw = Path(path).read_text()  # an explicit path must fail loudly
+    else:
+        try:
+            ref = resources.files("battle_royale") / "data" / "payouts.json"
+            raw = ref.read_text()
+        except (FileNotFoundError, ModuleNotFoundError):
+            return PayoutCurve(), {"source": "placeholder"}
+    table = json.loads(raw)
+    curve = PayoutCurve.from_prize_table(table["tiers"], float(table["entry_fee_usd"]))
+    meta = {k: v for k, v in table.items() if k != "tiers"}
+    meta["n_tiers"] = len(table["tiers"])
+    meta.setdefault("source", "prize table")
+    return curve, meta
 
 
 class _RankPayout:

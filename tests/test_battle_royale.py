@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import numpy as np
 import pytest
 
@@ -237,6 +239,39 @@ def test_payout_curve_ranks():
     # Range mean over a tied block spanning tiers pools the prizes.
     block = rp.range_mean(np.array([1.0]), np.array([3.0]))
     assert 100.0 < block[0] < 1000.0
+
+
+def test_payout_curve_from_prize_table(tmp_path):
+    from battle_royale.equity import _RankPayout, load_payout_table
+
+    tiers = [
+        {"rank_from": 1, "rank_to": 1, "prize_usd": 25_000.0},
+        {"rank_from": 2, "rank_to": 2, "prize_usd": 5_000.0},
+        {"rank_from": 3, "rank_to": 10, "prize_usd": 500.0},
+        {"rank_from": 11, "rank_to": 1000, "prize_usd": 25.0},
+    ]
+    curve = PayoutCurve.from_prize_table(tiers, entry_fee=10.0)
+    rp = _RankPayout(curve, 70_000)
+    # Dollar prizes become entry-fee multiples at the right absolute ranks.
+    assert list(rp.payout(np.array([1.0, 2.0, 3.0, 10.0, 11.0, 1000.0, 1001.0]))) == [
+        2500.0, 500.0, 50.0, 50.0, 2.5, 2.5, 0.0
+    ]
+
+    with pytest.raises(ValueError):
+        PayoutCurve.from_prize_table(tiers[1:], entry_fee=10.0)  # doesn't start at 1
+    with pytest.raises(ValueError):
+        PayoutCurve.from_prize_table([tiers[0], tiers[2]], entry_fee=10.0)  # gap at rank 2
+
+    # Loader round-trips a table file; metadata carries provenance for
+    # display; a typo'd explicit path fails loudly instead of silently
+    # falling back to the placeholder curve.
+    with pytest.raises(FileNotFoundError):
+        load_payout_table(tmp_path / "nope.json")
+    f = tmp_path / "payouts.json"
+    f.write_text(json.dumps({"contest": "unit test", "entry_fee_usd": 10.0, "tiers": tiers}))
+    loaded, meta = load_payout_table(f)
+    assert loaded.points == curve.points
+    assert meta["contest"] == "unit test" and meta["n_tiers"] == 4
 
 
 def test_better_roster_higher_equity(engine):

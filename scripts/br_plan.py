@@ -38,6 +38,7 @@ from battle_royale import (
 )
 from battle_royale.cache import DEFAULT_CACHE_DIR
 from battle_royale.constants import picks_of_seat
+from battle_royale.equity import load_payout_table
 
 
 def sample_board(engine, our_picks: dict[int, int], upto_pick: int, seed: int) -> DraftState:
@@ -151,6 +152,8 @@ def main() -> None:
     ap.add_argument("--boards", type=int, default=6)
     ap.add_argument("--avail-boards", type=int, default=250)
     ap.add_argument("--contest-size", type=int, default=70_000)
+    ap.add_argument("--payouts", default=None,
+                    help="prize-table JSON path (default: packaged real table if present)")
     ap.add_argument("--seed", type=int, default=20260912)
     ap.add_argument("--season", type=int, default=None, help="fetch Vegas lines + player status")
     ap.add_argument("--week", type=int, default=None)
@@ -183,7 +186,11 @@ def main() -> None:
     cfg.n_rollouts = 60
     cfg.seed = args.seed
     cfg.cache_dir = str(DEFAULT_CACHE_DIR)
-    opt = PickOptimizer(engine, TournamentModel(contest_size=args.contest_size), cfg)
+    curve, pay_meta = load_payout_table(args.payouts)
+    print(f"payout curve: {pay_meta.get('contest', pay_meta['source'])}")
+    opt = PickOptimizer(
+        engine, TournamentModel(contest_size=args.contest_size, curve=curve), cfg
+    )
     opt.warm()
     s = engine.slate
 
@@ -205,6 +212,7 @@ def main() -> None:
     plan = {
         "generated_for": "Underdog Battle Royale",
         "contest_size": args.contest_size,
+        "payouts": pay_meta.get("contest", pay_meta["source"]),
         "players": [
             {
                 "id": i,

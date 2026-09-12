@@ -25,7 +25,7 @@ import sys
 
 from .draft import DraftState
 from .engine import BattleRoyaleEngine
-from .equity import TournamentModel
+from .equity import TournamentModel, load_payout_table
 from .optimizer import OptimizerConfig, PickOptimizer
 from .slate import Slate
 
@@ -115,6 +115,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--interactive", action="store_true")
     ap.add_argument("--fast", action="store_true", help="lighter sims for live use")
     ap.add_argument("--contest-size", type=int, default=70_000)
+    ap.add_argument("--payouts", default=None,
+                    help="prize-table JSON path (default: packaged real table if present)")
     ap.add_argument("--seed", type=int, default=20260912)
     args = ap.parse_args(argv)
     if not 0 <= args.seat <= 5:
@@ -123,8 +125,9 @@ def main(argv: list[str] | None = None) -> int:
     engine = BattleRoyaleEngine.from_csv(args.csv, seed=args.seed)
     config = OptimizerConfig.fast() if args.fast else OptimizerConfig()
     config.seed = args.seed
+    curve, _ = load_payout_table(args.payouts)
     optimizer = PickOptimizer(
-        engine, TournamentModel(contest_size=args.contest_size), config
+        engine, TournamentModel(contest_size=args.contest_size, curve=curve), config
     )
 
     state = DraftState(engine.slate)

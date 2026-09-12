@@ -27,7 +27,7 @@ from .constants import POSITIONS, ROSTER_MAX, ROSTER_MIN, ROSTER_SIZE, SEATS
 from .correlation import CorrelationModel
 from .draft import DraftState
 from .engine import BattleRoyaleEngine
-from .equity import PayoutCurve, TournamentModel
+from .equity import PayoutCurve, TournamentModel, load_payout_table
 from .field import FieldAnalytics
 from .marginals import MarginalModel
 from .opponents import OpponentPolicy
@@ -51,4 +51,5 @@ __all__ = [
     "PickOptimizer",
     "Slate",
     "TournamentModel",
+    "load_payout_table",
 ]
