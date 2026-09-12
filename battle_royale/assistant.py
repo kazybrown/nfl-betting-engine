@@ -106,9 +106,12 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     state = DraftState(engine.slate)
+    history_idxs: list[int] = []
     if args.history.strip():
         for name in args.history.split(","):
-            state.apply_pick(match_player(engine.slate, name))
+            idx = match_player(engine.slate, name)
+            state.apply_pick(idx)
+            history_idxs.append(idx)
 
     if not args.interactive:
         if state.complete:
@@ -123,10 +126,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     print("interactive mode — 'p <name>' to record picks, 'rec', 'board', 'roster', 'undo', 'q'")
-    history: list[int] = list(
-        [i for r in state.rosters for i in r]
-    )  # not ordered; undo uses its own stack
-    undo_stack: list[int] = []
+    # Seed the undo stack with --history picks (in original pick order) so
+    # undo after startup replays them instead of discarding them.
+    undo_stack: list[int] = list(history_idxs)
     while not state.complete:
         on_clock = state.seat_on_clock()
         marker = " (YOU)" if on_clock == args.seat else ""

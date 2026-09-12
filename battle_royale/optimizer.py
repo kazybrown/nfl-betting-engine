@@ -191,9 +191,12 @@ class PickOptimizer:
         next_own = state.next_own_pick(seat)
         pair_mode = next_own == pick + 1
 
+        actions: list[tuple[int, ...]] = []
         if pair_mode:
             actions = self._pair_actions(state, seat)
-        else:
+            if not actions:
+                pair_mode = False  # degenerate endgame: no legal ordered pair
+        if not pair_mode:
             actions = [(c,) for c in self._candidates(state, seat, cfg.n_candidates)]
         if not actions:
             raise ValueError("no legal candidates")

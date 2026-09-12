@@ -42,10 +42,17 @@ class OpponentPolicy:
     diverse field (~96% unique).
     """
 
-    def __init__(self, slate: Slate, adp_sigma: float = 3.4, choice_noise: float = 0.12):
+    def __init__(
+        self,
+        slate: Slate,
+        adp_sigma: float = 3.4,
+        choice_noise: float = 0.12,
+        stack_scale: float = 1.0,
+    ):
         self.slate = slate
         self.adp_sigma = adp_sigma
         self.choice_noise = choice_noise
+        self.stack_scale = stack_scale
         # Infer the field's FLEX construction from room-drafted rates: excess
         # of expected per-roster position counts above mandatory minima.
         per_roster = np.array(
@@ -126,11 +133,11 @@ class OpponentPolicy:
                 if (p.position == "QB" and q.position in ("WR", "TE")) or (
                     q.position == "QB" and p.position in ("WR", "TE")
                 ):
-                    b += 0.72 * seat.stack
+                    b += 0.72 * self.stack_scale * seat.stack
             elif p.team == q.opponent or q.team == p.opponent:
                 if "QB" in (p.position, q.position):
-                    b += 0.10 * seat.stack
-        return min(b, 1.65)
+                    b += 0.10 * self.stack_scale * seat.stack
+        return min(b, 1.65 * self.stack_scale)
 
     def choose(
         self,

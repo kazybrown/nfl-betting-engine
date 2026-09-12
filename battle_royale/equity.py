@@ -74,7 +74,7 @@ class TournamentModel:
         """Expected payout (no tie sharing) for exceedance counts 0..K-1,
         integrating rank over the Beta(count+0.5, n-count+0.5) posterior."""
         f = float(self.contest_size)
-        k = self.tail_quadrature_below
+        k = min(self.tail_quadrature_below, max(n_entries - 1, 1))
         out = np.empty(k)
         for c in range(k):
             p = beta_dist.ppf(self._quad_q, c + 0.5, n_entries - c + 0.5)
@@ -122,7 +122,7 @@ class TournamentModel:
         score_sum = np.zeros(n_rosters)
         score_all = np.empty((n_sims, n_rosters), dtype=np.float32)
         top_table = self._top_payout_table(n_entries)
-        k_quad = self.tail_quadrature_below
+        k_quad = len(top_table)
 
         done = 0
         while done < n_sims:
