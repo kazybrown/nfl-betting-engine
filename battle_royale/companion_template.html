@@ -257,6 +257,21 @@ for (const [a, b, d] of PLAN.synergy) {
 let S = null; // {seat, roster:[], gone:[], hist:[]}
 try { S = JSON.parse(localStorage.getItem("br-companion") || "null"); } catch (e) {}
 
+// Completed-entry log (per week): your own finished rosters, so later drafts
+// can warn before you near-duplicate yourself — self-copies share prizes.
+const WEEK_KEY = (PLAN.payouts || "") + "|" + P.length + "|" + (P[0] ? P[0].name : "");
+function loadEntries() {
+  try { return JSON.parse(localStorage.getItem("br-entries") || "[]"); } catch (e) { return []; }
+}
+function logEntry(names) {
+  const all = loadEntries();
+  const sig = names.slice().sort().join("|");
+  if (all.some(e => e.week === WEEK_KEY && e.names.slice().sort().join("|") === sig)) return all;
+  all.push({week: WEEK_KEY, names});
+  try { localStorage.setItem("br-entries", JSON.stringify(all)); } catch (e) {}
+  return all;
+}
+
 const $ = (id) => document.getElementById(id);
 const save = () => { try { localStorage.setItem("br-companion", JSON.stringify(S)); } catch (e) {} };
 
@@ -334,6 +349,11 @@ function render() {
     $("done").hidden = false;
     $("finalroster").innerHTML = roster.map(i =>
       `<span class="chip">${P[i].name} <i>${P[i].pos}·${P[i].team}</i></span>`).join("");
+    const nLogged = logEntry(roster.map(i => P[i].name))
+      .filter(e => e.week === WEEK_KEY).length;
+    $("done").querySelector(".sub").textContent =
+      `Entry logged (${nLogged} this week — self-dup guard active in your next draft). ` +
+      `Send these six names back to Claude to log and grade the entry.`;
     save(); return;
   }
   $("done").hidden = true;
@@ -362,6 +382,11 @@ function render() {
     if (P[g].adp > pickNo + 2) runShift[P[g].pos] = Math.min(runShift[P[g].pos] + 1.2, 4);
   }
   const runsOn = Object.keys(runShift).filter(p => runShift[p] >= 2.4);
+  // Self-duplication guard: penalize candidates that would push this roster
+  // toward a copy of an entry you already finished this week.
+  const myEntries = loadEntries().filter(e => e.week === WEEK_KEY)
+    .map(e => new Set(e.names));
+  const rosterNames = roster.map(i => P[i].name);
   // Ranking = optimal construction GIVEN THE ROSTER SO FAR, with two
   // overrides: dropped values and high positive correlation.
   //   1. Base worth: ETR rank + stack correlation with your picks + soft
@@ -397,7 +422,15 @@ function render() {
         leverage: LEVERAGE[pl.pos] * (1 - pl.own),
         injury: pl.inj === "D" ? -0.35 : pl.inj === "Q" ? -0.15 : 0,
       };
-      const u = parts.value + parts.stack + parts.need + parts.leverage + parts.injury;
+      let dupMax = 0;
+      for (const en of myEntries) {
+        let ov = en.has(pl.name) ? 1 : 0;
+        for (const nm of rosterNames) if (en.has(nm)) ov++;
+        if (ov > dupMax) dupMax = ov;
+      }
+      parts.dup = dupMax >= R_SIZE ? -0.6 : dupMax >= R_SIZE - 1 ? -0.2 : 0;
+      const u = parts.value + parts.stack + parts.need + parts.leverage
+        + parts.injury + parts.dup;
       return {id: pl.id, pos: pl.pos, u, injGone, parts,
               eq: q ? q.eq : null,
               pav: pAvail(pl, pickNo, runShift[pl.pos]),
@@ -461,7 +494,7 @@ function render() {
   const minAdj = Math.min(...lastShown.map(r => r.adj));
   const span = Math.max(topAdj - minAdj, 0.5);
   const CHIP_LABELS = {wait: "can wait", leverage: "leverage", slid: "slid value",
-                       need: "roster need", injury: "injury"};
+                       need: "roster need", injury: "injury", dup: "self-dup"};
 
   $("queue").innerHTML = lastShown.map((q, k) => {
     const pl = P[q.id];

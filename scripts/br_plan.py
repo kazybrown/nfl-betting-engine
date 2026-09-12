@@ -248,7 +248,7 @@ def main() -> None:
     cfg = OptimizerConfig.fast()
     cfg.n_outcome_sims = 2500
     cfg.eval_field_entries = 3600
-    cfg.dup_field_entries = 24_000
+    cfg.dup_field_entries = min(contest_size, 56_000)  # duplication at true field scale
     cfg.n_rollouts = 60
     cfg.seed = args.seed
     cfg.cache_dir = str(DEFAULT_CACHE_DIR)
