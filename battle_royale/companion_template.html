@@ -156,15 +156,16 @@
       <p class="sub" style="margin-top:10px">Send these six names back to Claude to log and grade the entry.</p>
     </div>
 
-    <footer>Ranking = ETR rank backbone, adjusted by stack correlation with your roster
-      (a full stack lifts ~15 spots; overlaps drop a couple), soft construction logic
-      (QB urgency as picks run out, second-TE discount, WR2 fill), then weighted by the
-      probability each player is still on the board — inferred from ADP, room-drafted
-      rate and the current pick number, so opponents' picks are accounted for even if
-      you never mark them. "On board %" is that live estimate; dimmed rows are probably
-      gone (tap them only if your lobby proves otherwise — the gold strip calls out
-      slid values worth taking). Hard legality always enforced: 1 QB, 1-2 RB, 2-3 WR,
-      1-2 TE.</footer>
+    <footer>Ranking = optimal construction given your previous picks: base worth (ETR
+      rank + stack correlation with your roster + construction terms) plus positional
+      urgency — the drop-off between taking a position now and the best expected
+      survivor at that position at YOUR next pick — so it takes what won't come back
+      and waits on what will. Overrides: dropped values get a slide bonus, and high
+      positive correlation lifts a player ~15 rank spots. Everything is weighted by
+      each player's live on-board probability (inferred from ADP, room rate and the
+      current pick — opponents' picks counted without marking them). Dimmed rows are
+      probably gone; the gold strip calls out slid values worth taking if your lobby
+      still shows them. Hard legality enforced: 1 QB, 1-2 RB, 2-3 WR, 1-2 TE.</footer>
   </div>
 </div>
 <script>
@@ -182,6 +183,9 @@ const RANK_GAP = 0.08;
 const MODEL_TIEBREAK = 0.1;
 const ADP_SIGMA = 3.4;          // calibrated ADP execution spread (real archives)
 const LIKELY_GONE = 0.35;       // below this availability a row dims
+const URGENCY_WEIGHT = 1.0;     // positional drop-off to YOUR next pick
+const DROP_BONUS = 0.04;        // per pick of ADP slide for a still-there value
+const DROP_CAP = 0.5;
 const clampSyn = (v) => Math.max(-0.75, Math.min(0.75, v));
 const phi = (x) => 1 / (1 + Math.exp(-1.702 * x));  // fast normal CDF approx
 
@@ -302,27 +306,48 @@ function render() {
   }
 
   const taken = new Set([...S.roster, ...S.gone]);
-  // ETR-rank backbone over the WHOLE slate, adjusted by stack correlation and
-  // soft construction logic, then weighted by ADP-inferred availability so the
-  // most optimal REALISTIC next pick sits on top even if the user never marks
-  // opponents' picks.
+  // Ranking = optimal construction GIVEN THE ROSTER SO FAR, with two
+  // overrides: dropped values and high positive correlation.
+  //   1. Base worth: ETR rank + stack correlation with your picks + soft
+  //      construction terms (all roster-conditional).
+  //   2. Positional urgency: how much of that worth evaporates if you wait
+  //      for your NEXT pick (drop-off vs the best expected survivor at the
+  //      same position) — this sequences positions optimally from your
+  //      previous picks: take what won't come back, wait on what will.
+  //   3. Dropped-value bonus for players sliding past their ADP.
+  //   4. Weighted by ADP-inferred on-board probability (opponents' picks
+  //      accounted for without marking them).
   const qmeta = new Map(cur.sl.queue.map(q => [q.id, q]));
-  const rows = P
+  const ownPicks = PLAN.seats[String(S.seat)].own_picks;
+  const nextOwn = ownPicks.find(p => p > pickNo) || null;
+
+  const cands = P
     .filter(pl => !taken.has(pl.id) && ok.has(pl.pos))
     .map(pl => {
       const q = qmeta.get(pl.id);
-      const pav = pAvail(pl, pickNo);
       const u = RANK_GAP * (160 - pl.rank)
         + MODEL_TIEBREAK * (q ? q.score : 0)
         + SYNERGY_WEIGHT * clampSyn(synergyWith(pl.id, roster))
         + needBonus(pl.pos, roster);
-      return {
-        id: pl.id,
-        pav,
-        u,
-        pairs_with: q ? q.pairs_with : [],
-        adj: pav * u,
-      };
+      return {id: pl.id, pos: pl.pos, u,
+              pav: pAvail(pl, pickNo),
+              pavNext: nextOwn ? pAvail(pl, nextOwn) : 0,
+              pairs_with: q ? q.pairs_with : []};
+    });
+
+  // Best expected worth still on the board at your next pick, per position.
+  const bestLater = {QB: 0, RB: 0, WR: 0, TE: 0};
+  if (nextOwn) {
+    for (const c of cands) {
+      bestLater[c.pos] = Math.max(bestLater[c.pos], c.u * c.pavNext);
+    }
+  }
+
+  const rows = cands
+    .map(c => {
+      const urgency = nextOwn ? Math.max(0, c.u - bestLater[c.pos]) : 0;
+      const drop = Math.min(DROP_BONUS * Math.max(0, pickNo - P[c.id].adp), DROP_CAP);
+      return {...c, adj: c.pav * (c.u + URGENCY_WEIGHT * urgency + drop)};
     })
     .sort((a, b) => b.adj - a.adj);
 
