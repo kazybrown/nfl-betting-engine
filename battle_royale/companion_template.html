@@ -150,11 +150,11 @@
       <p class="sub" style="margin-top:10px">Send these six names back to Claude to log and grade the entry.</p>
     </div>
 
-    <footer>Queues are pre-computed by the battle_royale engine (tournament equity vs a
-      calibrated 70k field, duplication sharing included), marginalized over unknown opponent
-      boards. In-page re-ranking applies your actual roster's stack synergies and Underdog
-      legality (1 QB, 1-2 RB, 2-3 WR, 1-2 TE). Availability % is the pre-draft estimate for
-      your seat's pick slots.</footer>
+    <footer>Queue order follows ETR ranks, except when a player is gone/illegal for your
+      roster or a stack correlation with your players outweighs the rank gap (a full stack
+      lifts ~15 spots; overlaps drop a spot or two). Correlations and availability % come
+      from the battle_royale engine (fitted covariances; boards simulated against a
+      calibrated 70k field). Legality enforced: 1 QB, 1-2 RB, 2-3 WR, 1-2 TE.</footer>
   </div>
 </div>
 <script>
@@ -162,12 +162,14 @@ const PLAN = __PLAN_JSON__;
 
 const POS_MIN = {QB:1, RB:1, WR:2, TE:1};
 const POS_MAX = {QB:1, RB:2, WR:3, TE:2};
-// How hard roster stack/overlap correlations push the live re-ranking.
-// The pre-computed queue scores assume the modal roster; once the user's
-// actual roster exists, correlation with it is the main new information.
+// Queue order = ETR rank order, unless a player is gone/illegal or roster
+// correlation outweighs the rank gap. RANK_GAP is the score distance between
+// adjacent ETR ranks, so a full stack bonus (+0.75 clamped x 1.6) can lift a
+// player about 15 rank spots; a mild overlap penalty drops him one or two.
+// The engine's slot score survives only as a small tiebreak (~1 spot).
 const SYNERGY_WEIGHT = 1.6;
-// Total roster-synergy push is clamped so a triple stack cannot fully
-// drown value, availability and legality in the ranking.
+const RANK_GAP = 0.08;
+const MODEL_TIEBREAK = 0.1;
 const clampSyn = (v) => Math.max(-0.75, Math.min(0.75, v));
 const P = PLAN.players;
 const SYN = {};
@@ -264,23 +266,23 @@ function render() {
   }
 
   const taken = new Set([...S.roster, ...S.gone]);
-  let rows = cur.sl.queue
-    .filter(q => !taken.has(q.id) && ok.has(P[q.id].pos))
-    .map(q => ({...q, adj: q.score + SYNERGY_WEIGHT * clampSyn(synergyWith(q.id, roster))}))
+  // ETR-rank backbone over the WHOLE slate (not just precomputed rows), with
+  // engine metadata (availability, pair hints) attached where it exists.
+  const qmeta = new Map(cur.sl.queue.map(q => [q.id, q]));
+  const rows = P
+    .filter(pl => !taken.has(pl.id) && ok.has(pl.pos))
+    .map(pl => {
+      const q = qmeta.get(pl.id);
+      return {
+        id: pl.id,
+        avail: q ? q.avail : null,
+        pairs_with: q ? q.pairs_with : [],
+        adj: -RANK_GAP * pl.rank
+          + MODEL_TIEBREAK * (q ? q.score : 0)
+          + SYNERGY_WEIGHT * clampSyn(synergyWith(pl.id, roster)),
+      };
+    })
     .sort((a, b) => b.adj - a.adj);
-  // If the precomputed queue thins out (the user's roster diverged from the
-  // modal path — e.g. still needs a QB the plan filled earlier), backfill
-  // from the whole pool by value so a legal pick is always one tap away.
-  if (rows.length < 6) {
-    const have = new Set(rows.map(r => r.id));
-    const fillers = P
-      .filter(pl => !taken.has(pl.id) && !have.has(pl.id) && ok.has(pl.pos))
-      .map(pl => ({id: pl.id, score: 0, eq: null, avail: null, pairs_with: [],
-                   adj: pl.value / 40 + SYNERGY_WEIGHT * clampSyn(synergyWith(pl.id, roster))}))
-      .sort((a, b) => b.adj - a.adj)
-      .slice(0, 8 - rows.length);
-    rows = rows.concat(fillers);
-  }
 
   $("qtitle").textContent = `Your queue — pick ${pickNo}`;
   $("qhint").textContent = "take the highest name still on your board";
@@ -301,7 +303,7 @@ function render() {
     return `<div class="prow${k === 0 ? " top" : ""}${syn > 0.015 ? " stacked" : ""}" data-id="${q.id}">
       <span class="rk">${k + 1}</span>
       <span><span class="nm">${pl.name}</span><span class="pos-tag ${pl.pos}">${pl.pos}·${pl.team}</span>${synBadge}<br>
-        <span class="meta">${Math.round(pl.own * 100)}% rooms · adp ${pl.adp.toFixed(1)}${pwTxt}</span></span>
+        <span class="meta">ETR ${pl.rank} · ${Math.round(pl.own * 100)}% rooms · adp ${pl.adp.toFixed(1)}${pwTxt}</span></span>
       <span class="av">${q.avail == null ? "–" : Math.round(q.avail * 100) + "%"}<br><span style="font-size:10px">avail</span></span>
       <button class="gonebtn" data-gone="${q.id}" aria-label="mark ${pl.name} gone">✕</button>
     </div>`;

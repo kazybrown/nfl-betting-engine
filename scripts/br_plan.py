@@ -194,6 +194,7 @@ def main() -> None:
                 "pos": p.position,
                 "team": p.team,
                 "opp": p.opponent,
+                "rank": p.rank,
                 "adp": p.adp,
                 "own": round(p.room_drafted_rate, 3),
                 "value": round(float(opt.values[i]), 2),
