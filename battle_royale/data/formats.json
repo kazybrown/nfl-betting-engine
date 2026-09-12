@@ -1,26 +1,71 @@
 {
-  "comment": "Structural registry of Underdog 6-man weekly NFL draft formats. Only formats with VERIFIED structure belong here - never guess rounds or roster bounds. roster_min/roster_max keys are QB/RB/WR/TE. payouts_file names a JSON in this directory with that contest's prize table.",
+  "comment": "Structural registry of Underdog weekly NFL draft tournaments. Only formats with VERIFIED structure belong here - never guess rounds or roster bounds. roster_min/roster_max keys are QB/RB/WR/TE. payouts_file names a JSON in this directory with that contest's prize table; formats without one use the labeled placeholder curve. Structure sources: Underdog's official pick-by-pick archives (storage.googleapis.com/underdog-inc), help center, and corroborating media - see the format-catalog research (2026-09-12).",
   "formats": [
     {
       "key": "battle_royale",
       "name": "Battle Royale",
       "seats": 6,
       "rounds": 6,
-      "roster_min": {
-        "QB": 1,
-        "RB": 1,
-        "WR": 2,
-        "TE": 1
-      },
-      "roster_max": {
-        "QB": 1,
-        "RB": 2,
-        "WR": 3,
-        "TE": 2
-      },
+      "roster_min": {"QB": 1, "RB": 1, "WR": 2, "TE": 1},
+      "roster_max": {"QB": 1, "RB": 2, "WR": 3, "TE": 2},
       "default_contest_size": 55992,
       "payouts_file": "payouts.json",
-      "notes": "Flagship weekly: QB/RB/WR/WR/TE/FLEX, one pooled tournament; 2025 cap 55,992 entries at $7 (2023-24 fields ran 28-68k)."
+      "notes": "Flagship weekly, Sunday main slate, weeks 1-18. Archive-proven: 6x6, FLEX=RB/WR/TE, 30s clock. 2025 cap 55,992 at $7 (2023-24 fields 28-68k). OUT-before-kickoff players auto-swap to an undrafted player when legal."
+    },
+    {
+      "key": "battle_royale_wild_card",
+      "name": "Battle Royale - Wild Card",
+      "seats": 6,
+      "rounds": 6,
+      "roster_min": {"QB": 1, "RB": 1, "WR": 2, "TE": 1},
+      "roster_max": {"QB": 1, "RB": 2, "WR": 3, "TE": 2},
+      "default_contest_size": 31000,
+      "payouts_file": null,
+      "notes": "All six Wild Card games. Archive-proven 6x6, two postseasons (Jan 2025: 32,088; Jan 2026: 30,468). ~$5 entry, ~$200k pool / $20k first (media-sourced) - no verified prize table yet, placeholder curve applies."
+    },
+    {
+      "key": "battle_royale_divisional",
+      "name": "Battle Royale - Divisional",
+      "seats": 6,
+      "rounds": 6,
+      "roster_min": {"QB": 1, "RB": 1, "WR": 2, "TE": 1},
+      "roster_max": {"QB": 1, "RB": 2, "WR": 3, "TE": 2},
+      "default_contest_size": 32000,
+      "payouts_file": null,
+      "notes": "All four Divisional games. Archive-proven 6x6, two postseasons. Fee/prizes unverified - placeholder curve applies."
+    },
+    {
+      "key": "battle_royale_conf_championship",
+      "name": "Battle Royale - Conf Championship",
+      "seats": 4,
+      "rounds": 6,
+      "roster_min": {"QB": 1, "RB": 1, "WR": 2, "TE": 1},
+      "roster_max": {"QB": 1, "RB": 2, "WR": 3, "TE": 2},
+      "default_contest_size": 44000,
+      "payouts_file": null,
+      "notes": "Two-game championship slate; rooms shrink to 4 drafters (archive-proven: picks 1-24, 4x6). Jan 2025: 40,148 entries; Jan 2026: 48,156. Fee/prizes unverified - placeholder curve applies. TE2 builds spike on this slate."
+    },
+    {
+      "key": "the_turkey",
+      "name": "The Turkey",
+      "seats": 4,
+      "rounds": 6,
+      "roster_min": {"QB": 1, "RB": 1, "WR": 2, "TE": 1},
+      "roster_max": {"QB": 1, "RB": 2, "WR": 3, "TE": 2},
+      "default_contest_size": 40000,
+      "payouts_file": null,
+      "notes": "Thanksgiving three-game slate. Archive-proven 4x6 in 2023 and 2024 (2024: 39,992 entries in 9,998 rooms); 2022 ran 6-seat and one 2025 article claims 6-seat again - CONFIRM the lobby seat count before drafting. Fee/prizes unverified - placeholder curve applies."
+    },
+    {
+      "key": "battle_royale_single_game",
+      "name": "Battle Royale - Single Game (TNF/SNF/MNF)",
+      "seats": 3,
+      "rounds": 4,
+      "roster_min": {"QB": 0, "RB": 0, "WR": 0, "TE": 0},
+      "roster_max": {"QB": 0, "RB": 4, "WR": 4, "TE": 4},
+      "default_contest_size": 20000,
+      "payouts_file": null,
+      "notes": "One primetime game; 3 drafters x 4 rounds, NO QBs (sourced verbatim from Underdog's content arm, c.2022-23). Per-position flex caps are UNVERIFIED (no-cap assumed) and 2025-26 existence unconfirmed - verify the lobby rules card before using this format. Field size is a guess; fee/prizes unverified."
     }
   ]
 }

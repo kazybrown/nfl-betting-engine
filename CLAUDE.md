@@ -9,18 +9,26 @@ run the model and answer with the ranked board, fast.
 
 ### Contest formats
 
-The engine covers every Underdog 6-man weekly NFL draft tournament, not just
+The engine covers every Underdog weekly NFL draft tournament, not just
 Battle Royale. Structure (seats, rounds, roster bounds, payout table) comes
 from the registry `battle_royale/data/formats.json`; every CLI takes
 `--format KEY` (default `battle_royale`). Switching contests = the right
-`--format` plus that contest's ETR export CSV. When the user names a contest
-(Battle Royale, Hurry Up, The Turkey, a playoff edition), use its key; if a
+`--format` plus that contest's ETR export CSV. Registered (structure
+archive-verified 2026-09): `battle_royale` (6x6), playoff editions
+(`battle_royale_wild_card` / `_divisional` 6x6, `_conf_championship` 4x6),
+`the_turkey` (4x6 in 2023-24 — confirm the lobby seat count each year),
+`battle_royale_single_game` (3 seats x 4 rounds, NO QBs; flex caps
+unverified — confirm the lobby rules before using). "Hurry Up" is NOT an
+Underdog contest — it was the codename of the user's pre-repo prototype;
+if the user names it, they mean this engine (default Battle Royale). If a
 format is missing from the registry, add it ONLY with verified structure —
 never guess rounds or roster rules (ask the user for the lobby screenshot).
-Caches are format-keyed, so slates warmed under different formats never
-collide. Per-format prize tables live next to the registry as JSON named by
-`payouts_file` (see `battle_royale.equity.load_payout_table`); `--payouts
-PATH` overrides.
+Opponent-policy behavioral parameters are calibrated on 6x6 BR archives and
+carry over as priors to the other formats (structure adapts exactly; field
+tendencies approximately). Caches are format-keyed, so slates warmed under
+different formats never collide. Per-format prize tables live next to the
+registry as JSON named by `payouts_file` (see
+`battle_royale.equity.load_payout_table`); `--payouts PATH` overrides.
 
 Environment: use the repo venv `.venv-br/bin/python` (create with
 `uv venv .venv-br && uv pip install --python .venv-br/bin/python numpy scipy

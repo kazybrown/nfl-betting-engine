@@ -208,6 +208,16 @@ def test_contest_format_structure():
     with pytest.raises(KeyError):
         get_format("not_a_format")
 
+    # Registry entries load and validate; archive-verified structural facts.
+    from battle_royale.formats import load_formats
+
+    reg = load_formats()
+    assert reg["the_turkey"].seats == 4 and reg["the_turkey"].total_picks == 24
+    assert reg["battle_royale_conf_championship"].seats == 4
+    assert reg["battle_royale_wild_card"].total_picks == 36
+    sg = reg["battle_royale_single_game"]
+    assert sg.seats == 3 and sg.rounds == 4 and sg.roster_max[0] == 0  # no QBs
+
 
 def test_alt_format_room_and_field():
     from battle_royale.field import generate_field
