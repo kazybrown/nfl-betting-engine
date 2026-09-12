@@ -61,8 +61,12 @@ the full report/cheat sheet:
 
     .venv-br/bin/python scripts/br_week_report.py --csv SLATE.csv --guided-drafts
 
-Contest size default is 70,000 entries (real 2023-24 fields ran 28-68k);
-override with `--contest-size` if the user knows the week's field.
+Contest size defaults to the format's field size (Battle Royale: 55,992,
+the 2025 $7-flagship cap; 2023-24 fields ran 28-68k); override with
+`--contest-size` if the user knows the week's field. The BR payout table
+(`battle_royale/data/payouts.json`) has verified ranks 1-4 and min-cash;
+ranks 5-9,500 are labeled interpolations — replace them when the user
+shares the in-app prize breakdown screenshot.
 
 ### Repo conventions
 

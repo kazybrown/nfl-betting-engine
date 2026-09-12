@@ -42,7 +42,7 @@ from battle_royale.formats import get_format
 
 
 def build_optimizer(
-    csv: str, contest_size: int, full: bool, seed: int,
+    csv: str, contest_size: int | None, full: bool, seed: int,
     season: int | None = None, week: int | None = None,
     payouts: str | None = None, fmt_key: str = "battle_royale",
 ) -> PickOptimizer:
@@ -55,6 +55,7 @@ def build_optimizer(
     from battle_royale.slate import Slate
 
     fmt = get_format(fmt_key)
+    contest_size = contest_size or fmt.default_contest_size
     engine = BattleRoyaleEngine(Slate.from_csv(csv, fmt=fmt), seed=seed, game_lines=game_lines)
     config = OptimizerConfig() if full else OptimizerConfig.fast()
     config.seed = seed
@@ -76,7 +77,8 @@ def main() -> int:
     ap.add_argument("--top", type=int, default=8, help="options to display")
     ap.add_argument("--format", default="battle_royale", dest="fmt",
                     help="contest format key from battle_royale/data/formats.json")
-    ap.add_argument("--contest-size", type=int, default=70_000)
+    ap.add_argument("--contest-size", type=int, default=None,
+                    help="entries in the contest (default: the format's field size)")
     ap.add_argument("--payouts", default=None,
                     help="prize-table JSON path (default: packaged real table if present)")
     ap.add_argument("--seed", type=int, default=20260912)

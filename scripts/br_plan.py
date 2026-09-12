@@ -154,7 +154,8 @@ def main() -> None:
                     help="seats to plan (default: all)")
     ap.add_argument("--boards", type=int, default=6)
     ap.add_argument("--avail-boards", type=int, default=250)
-    ap.add_argument("--contest-size", type=int, default=70_000)
+    ap.add_argument("--contest-size", type=int, default=None,
+                    help="entries in the contest (default: the format's field size)")
     ap.add_argument("--payouts", default=None,
                     help="prize-table JSON path (default: packaged real table if present)")
     ap.add_argument("--seed", type=int, default=20260912)
@@ -167,6 +168,7 @@ def main() -> None:
 
     fmt = get_format(args.fmt)
     seats = args.seats or list(range(1, fmt.seats + 1))
+    contest_size = args.contest_size or fmt.default_contest_size
     lines, statuses = {}, {}
     slate_obj = Slate.from_csv(args.csv, fmt=fmt)
     if args.season and args.week:
@@ -195,7 +197,7 @@ def main() -> None:
     print(f"format: {fmt.name} ({fmt.seats} seats x {fmt.rounds} rounds); "
           f"payout curve: {pay_meta.get('contest', pay_meta['source'])}")
     opt = PickOptimizer(
-        engine, TournamentModel(contest_size=args.contest_size, curve=curve), cfg
+        engine, TournamentModel(contest_size=contest_size, curve=curve), cfg
     )
     opt.warm()
     s = engine.slate
@@ -225,7 +227,7 @@ def main() -> None:
             "pos_min": dict(zip(("QB", "RB", "WR", "TE"), fmt.roster_min)),
             "pos_max": dict(zip(("QB", "RB", "WR", "TE"), fmt.roster_max)),
         },
-        "contest_size": args.contest_size,
+        "contest_size": contest_size,
         "payouts": pay_meta.get("contest", pay_meta["source"]),
         "players": [
             {

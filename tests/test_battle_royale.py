@@ -316,6 +316,25 @@ def test_payout_curve_from_prize_table(tmp_path):
     assert meta["contest"] == "unit test" and meta["n_tiers"] == 4
 
 
+def test_packaged_br_payout_table():
+    from battle_royale.equity import _RankPayout, load_payout_table
+
+    curve, meta = load_payout_table()  # packaged table must exist and load
+    assert meta["source"] != "placeholder"
+    assert meta["entry_fee_usd"] == 7.0 and meta["verified_through_rank"] == 4
+    rp = _RankPayout(curve, meta["max_entries"])
+    # Sourced facts: $50k/$25k/$15k/$10k top four, ~$9.94 min cash through
+    # rank 9,500, nothing past the last paid place.
+    assert list(rp.payout(np.array([1.0, 2.0, 3.0, 4.0]))) == pytest.approx(
+        [50000 / 7, 25000 / 7, 15000 / 7, 10000 / 7]
+    )
+    assert rp.payout(np.array([9500.0]))[0] == pytest.approx(10 / 7)
+    assert rp.payout(np.array([9501.0]))[0] == 0.0
+    # Interpolated middle must decline monotonically.
+    mids = rp.payout(np.arange(5.0, 9500.0))
+    assert (np.diff(mids) <= 1e-9).all()
+
+
 def test_better_roster_higher_equity(engine):
     s = engine.slate
     rng = np.random.default_rng(4)

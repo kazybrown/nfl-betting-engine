@@ -117,12 +117,14 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--fast", action="store_true", help="lighter sims for live use")
     ap.add_argument("--format", default="battle_royale", dest="fmt",
                     help="contest format key from battle_royale/data/formats.json")
-    ap.add_argument("--contest-size", type=int, default=70_000)
+    ap.add_argument("--contest-size", type=int, default=None,
+                    help="entries in the contest (default: the format's field size)")
     ap.add_argument("--payouts", default=None,
                     help="prize-table JSON path (default: packaged real table if present)")
     ap.add_argument("--seed", type=int, default=20260912)
     args = ap.parse_args(argv)
     fmt = get_format(args.fmt)
+    contest_size = args.contest_size or fmt.default_contest_size
     if not 0 <= args.seat < fmt.seats:
         ap.error(f"--seat must be 0-{fmt.seats - 1} (your pick order minus one)")
 
@@ -131,7 +133,7 @@ def main(argv: list[str] | None = None) -> int:
     config.seed = args.seed
     curve, _ = load_payout_table(args.payouts, filename=fmt.payouts_file)
     optimizer = PickOptimizer(
-        engine, TournamentModel(contest_size=args.contest_size, curve=curve), config
+        engine, TournamentModel(contest_size=contest_size, curve=curve), config
     )
 
     state = DraftState(engine.slate)

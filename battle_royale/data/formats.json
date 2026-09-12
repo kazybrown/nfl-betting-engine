@@ -6,11 +6,21 @@
       "name": "Battle Royale",
       "seats": 6,
       "rounds": 6,
-      "roster_min": {"QB": 1, "RB": 1, "WR": 2, "TE": 1},
-      "roster_max": {"QB": 1, "RB": 2, "WR": 3, "TE": 2},
-      "default_contest_size": 70000,
+      "roster_min": {
+        "QB": 1,
+        "RB": 1,
+        "WR": 2,
+        "TE": 1
+      },
+      "roster_max": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 3,
+        "TE": 2
+      },
+      "default_contest_size": 55992,
       "payouts_file": "payouts.json",
-      "notes": "Flagship weekly: QB/RB/WR/WR/TE/FLEX, one pooled tournament; 2023-24 fields ran 28-68k entries."
+      "notes": "Flagship weekly: QB/RB/WR/WR/TE/FLEX, one pooled tournament; 2025 cap 55,992 entries at $7 (2023-24 fields ran 28-68k)."
     }
   ]
 }

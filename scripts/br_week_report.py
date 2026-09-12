@@ -140,7 +140,8 @@ def main() -> None:
     ap.add_argument("--out", default="reports/battle_royale")
     ap.add_argument("--format", default="battle_royale", dest="fmt",
                     help="contest format key from battle_royale/data/formats.json")
-    ap.add_argument("--contest-size", type=int, default=70_000)
+    ap.add_argument("--contest-size", type=int, default=None,
+                    help="entries in the contest (default: the format's field size)")
     ap.add_argument("--payouts", default=None,
                     help="prize-table JSON path (default: packaged real table if present)")
     ap.add_argument("--fast", action="store_true")
@@ -153,18 +154,19 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=True)
 
     fmt = get_format(args.fmt)
+    contest_size = args.contest_size or fmt.default_contest_size
     engine = BattleRoyaleEngine.from_csv(args.csv, seed=args.seed, fmt=fmt)
     config = OptimizerConfig.fast() if args.fast else OptimizerConfig()
     config.seed = args.seed
     curve, pay_meta = load_payout_table(args.payouts, filename=fmt.payouts_file)
     optimizer = PickOptimizer(
-        engine, TournamentModel(contest_size=args.contest_size, curve=curve), config
+        engine, TournamentModel(contest_size=contest_size, curve=curve), config
     )
 
     report: dict = {
         "format": fmt.key,
         "slate_players": engine.slate.n,
-        "contest_size": args.contest_size,
+        "contest_size": contest_size,
         "payouts": pay_meta.get("contest", pay_meta["source"]),
         "marginal_table": engine.marginals.table_source,
         "correlation_table": engine.correlation.table_source,
