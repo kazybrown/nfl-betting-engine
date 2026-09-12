@@ -156,16 +156,18 @@
       <p class="sub" style="margin-top:10px">Send these six names back to Claude to log and grade the entry.</p>
     </div>
 
-    <footer>Ranking = optimal construction given your previous picks: base worth (ETR
-      rank + stack correlation with your roster + construction terms) plus positional
-      urgency — the drop-off between taking a position now and the best expected
-      survivor at that position at YOUR next pick — so it takes what won't come back
-      and waits on what will. Overrides: dropped values get a slide bonus, and high
-      positive correlation lifts a player ~15 rank spots. Everything is weighted by
-      each player's live on-board probability (inferred from ADP, room rate and the
-      current pick — opponents' picks counted without marking them). Dimmed rows are
-      probably gone; the gold strip calls out slid values worth taking if your lobby
-      still shows them. Hard legality enforced: 1 QB, 1-2 RB, 2-3 WR, 1-2 TE.</footer>
+    <footer>Objective: win the contest. Worth = ETR value backbone + the engine's
+      tournament-equity signal (rollouts scored for 1st-place payout vs a calibrated
+      70k field with duplicate prize sharing) + stack correlation with your roster +
+      construction terms + position-aware leverage (winners run chalk RB/TE cores and
+      take ownership leverage at QB — capped so uniqueness is only bought cheap).
+      Sequencing = positional urgency: the drop-off between taking a position now and
+      the best expected survivor at YOUR next pick, recomputed from your previous
+      picks. Overrides: dropped values get a slide bonus; high positive correlation
+      lifts ~15 rank spots. All of it weighted by live on-board probability (inferred
+      from ADP, room rate and current pick — opponents' picks counted without marking).
+      Dimmed rows are probably gone; the gold strip flags slid values. Hard legality:
+      1 QB, 1-2 RB, 2-3 WR, 1-2 TE.</footer>
   </div>
 </div>
 <script>
@@ -178,14 +180,23 @@ const POS_MAX = {QB:1, RB:2, WR:3, TE:2};
 // adjacent ETR ranks, so a full stack bonus (+0.75 clamped x 1.6) can lift a
 // player about 15 rank spots; a mild overlap penalty drops him one or two.
 // The engine's slot score survives only as a small tiebreak (~1 spot).
+// Objective: WIN the contest. Worth = ETR value backbone + the engine's
+// tournament-equity signal (rollouts scored for 1st-place payout against a
+// calibrated 70k field, duplication sharing included) + stack correlation +
+// construction + position-aware leverage (real winners ran chalk RB/TE cores
+// and took their ownership leverage at QB), then sequenced by positional
+// urgency and weighted by live on-board probability.
 const SYNERGY_WEIGHT = 1.6;
 const RANK_GAP = 0.08;
-const MODEL_TIEBREAK = 0.1;
+const EQUITY_WEIGHT = 0.7;      // engine win-equity votes (0..1 per slot)
 const ADP_SIGMA = 3.4;          // calibrated ADP execution spread (real archives)
 const LIKELY_GONE = 0.35;       // below this availability a row dims
 const URGENCY_WEIGHT = 1.0;     // positional drop-off to YOUR next pick
 const DROP_BONUS = 0.04;        // per pick of ADP slide for a still-there value
 const DROP_CAP = 0.5;
+// Leverage: (1 - room%) scaled by position; capped so it never lifts a player
+// more than ~4-5 ETR spots — uniqueness is bought only when it's cheap.
+const LEVERAGE = {QB: 0.35, TE: 0.12, WR: 0.12, RB: 0.05};
 const clampSyn = (v) => Math.max(-0.75, Math.min(0.75, v));
 const phi = (x) => 1 / (1 + Math.exp(-1.702 * x));  // fast normal CDF approx
 
@@ -326,9 +337,10 @@ function render() {
     .map(pl => {
       const q = qmeta.get(pl.id);
       const u = RANK_GAP * (160 - pl.rank)
-        + MODEL_TIEBREAK * (q ? q.score : 0)
+        + EQUITY_WEIGHT * (q ? q.score : 0)
         + SYNERGY_WEIGHT * clampSyn(synergyWith(pl.id, roster))
-        + needBonus(pl.pos, roster);
+        + needBonus(pl.pos, roster)
+        + LEVERAGE[pl.pos] * (1 - pl.own);
       return {id: pl.id, pos: pl.pos, u,
               pav: pAvail(pl, pickNo),
               pavNext: nextOwn ? pAvail(pl, nextOwn) : 0,
@@ -343,13 +355,21 @@ function render() {
     }
   }
 
+  // Availability does NOT discount the current pick's worth — the user is
+  // looking at their lobby board and takes the highest name actually there.
+  // It only buckets rows: probably-gone players render dimmed at the bottom
+  // (and elite ones in the slid strip). The future stays probabilistic:
+  // urgency uses on-board odds at the NEXT pick, capped so early-draft
+  // scarcity never swamps player worth.
   const rows = cands
     .map(c => {
-      const urgency = nextOwn ? Math.max(0, c.u - bestLater[c.pos]) : 0;
+      const urgency = nextOwn
+        ? Math.min(Math.max(0, c.u - bestLater[c.pos]), 1.2) : 0;
       const drop = Math.min(DROP_BONUS * Math.max(0, pickNo - P[c.id].adp), DROP_CAP);
-      return {...c, adj: c.pav * (c.u + URGENCY_WEIGHT * urgency + drop)};
+      return {...c, gone: c.pav < LIKELY_GONE,
+              adj: c.u + URGENCY_WEIGHT * urgency + drop};
     })
-    .sort((a, b) => b.adj - a.adj);
+    .sort((a, b) => (a.gone - b.gone) || (b.adj - a.adj));
 
   // Slid-value alert: elite targets ADP says are probably gone — but if your
   // lobby board still shows one, he IS the pick.
@@ -363,7 +383,7 @@ function render() {
   }
 
   $("qtitle").textContent = `Your queue — pick ${pickNo}`;
-  $("qhint").textContent = "take the highest name still on your board";
+  $("qhint").textContent = "ranked for 1st-place equity — take the highest name on your board";
   $("queue").innerHTML = rows.slice(0, 12).map((q, k) => {
     const pl = P[q.id];
     const syn = synergyWith(q.id, roster);
