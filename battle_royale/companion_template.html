@@ -1,0 +1,374 @@
+<title>Battle Royale Draft Companion</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --paper: #14181A;
+    --card: #1C2124;
+    --card-hi: #232A2E;
+    --ink: #EAEBE4;
+    --muted: #97A29B;
+    --line: #2E3538;
+    --accent: #E4B84D;
+    --accent-ink: #14181A;
+    --good: #5FBE8D;
+    --bad: #D07B62;
+    --qb: #82A8CE;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --paper: #F2F1EA;
+      --card: #FBFAF4;
+      --card-hi: #FFFFFF;
+      --ink: #191E1B;
+      --muted: #5D675F;
+      --line: #D8D9CC;
+      --accent: #A8781E;
+      --accent-ink: #FFFDF5;
+      --good: #2F7E56;
+      --bad: #A14A37;
+      --qb: #4A6E96;
+    }
+  }
+  :root[data-theme="light"] {
+    --paper: #F2F1EA;
+    --card: #FBFAF4;
+    --card-hi: #FFFFFF;
+    --ink: #191E1B;
+    --muted: #5D675F;
+    --line: #D8D9CC;
+    --accent: #A8781E;
+    --accent-ink: #FFFDF5;
+    --good: #2F7E56;
+    --bad: #A14A37;
+    --qb: #4A6E96;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--paper); color: var(--ink); margin: 0;
+    font: 15px/1.5 "IBM Plex Sans", system-ui, sans-serif;
+    padding-block: 0 40px; padding-inline: 16px;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  header { padding-block: 18px 10px; }
+  .eyebrow { font: 500 11px/1 "IBM Plex Mono", monospace; letter-spacing: .14em;
+             text-transform: uppercase; color: var(--accent); }
+  h1 { font: 700 34px/1 "Barlow Condensed", "Arial Narrow", sans-serif;
+       text-transform: uppercase; margin: 6px 0 2px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0; }
+
+  .seatgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; }
+  .seatbtn { background: var(--card); border: 1px solid var(--line); color: var(--ink);
+             border-radius: 10px; padding: 18px 8px; text-align: center; cursor: pointer; }
+  .seatbtn:focus-visible { outline: 2px solid var(--accent); }
+  .seatbtn b { display: block; font: 700 30px/1 "Barlow Condensed", sans-serif; }
+  .seatbtn span { font: 400 10.5px/1.4 "IBM Plex Mono", monospace; color: var(--muted); }
+
+  .bar { position: sticky; top: 0; z-index: 5; background: var(--paper);
+         padding-block: 10px 8px; border-bottom: 1px solid var(--line); }
+  .bar .row1 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .onclock { font: 700 22px/1 "Barlow Condensed", sans-serif; text-transform: uppercase; }
+  .onclock small { color: var(--accent); }
+  .ghost { margin-left: auto; background: none; border: 1px solid var(--line); color: var(--muted);
+           border-radius: 8px; padding: 7px 12px; font: 500 12px/1 "IBM Plex Mono", monospace; cursor: pointer; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip { background: var(--card-hi); border: 1px solid var(--line); border-radius: 999px;
+          padding: 5px 11px; font-size: 12.5px; }
+  .chip i { font-style: normal; color: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: 10.5px; }
+  .chip.empty { color: var(--muted); border-style: dashed; background: none; }
+
+  .qhead { display: flex; align-items: baseline; gap: 8px; margin: 16px 0 8px; }
+  .qhead h2 { font: 600 19px/1 "Barlow Condensed", sans-serif; text-transform: uppercase;
+              letter-spacing: .03em; margin: 0; }
+  .qhead .hint { color: var(--muted); font-size: 12px; }
+  .qlist { display: flex; flex-direction: column; gap: 8px; }
+  .prow { display: grid; grid-template-columns: 30px 1fr auto auto; gap: 10px; align-items: center;
+          background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+          padding: 12px 12px; cursor: pointer; min-height: 52px; }
+  .prow:active { background: var(--card-hi); }
+  .prow.top { border-color: var(--accent); }
+  .prow .rk { font: 700 17px/1 "Barlow Condensed", sans-serif; color: var(--muted); text-align: center; }
+  .prow.top .rk { color: var(--accent); }
+  .prow .nm { font-weight: 600; font-size: 15px; }
+  .prow .meta { font: 400 11px/1.5 "IBM Plex Mono", monospace; color: var(--muted); }
+  .prow.stacked { border-left: 3px solid var(--good); }
+  .syn-badge { display: inline-block; font: 600 10.5px/1 "IBM Plex Mono", monospace;
+               border-radius: 4px; padding: 3px 6px; margin-left: 8px; vertical-align: 1px; }
+  .syn-badge.pos { color: var(--good); border: 1px solid var(--good);
+                   background: color-mix(in srgb, var(--good) 12%, transparent); }
+  .syn-badge.neg { color: var(--bad); border: 1px solid var(--bad);
+                   background: color-mix(in srgb, var(--bad) 10%, transparent); }
+  .prow .av { font: 500 12px/1 "IBM Plex Mono", monospace; color: var(--muted); text-align: right; }
+  .prow .gonebtn { background: none; border: 1px solid var(--line); color: var(--muted);
+                   border-radius: 8px; width: 40px; height: 40px; font-size: 15px; cursor: pointer; }
+  .pos-tag { font: 600 10px/1 "IBM Plex Mono", monospace; border: 1px solid var(--line);
+             color: var(--muted); border-radius: 3px; padding: 2px 4px; margin-left: 7px; vertical-align: 1px; }
+  .pos-tag.QB { color: var(--qb); border-color: var(--qb); }
+  .must { font: 500 11.5px/1.5 "IBM Plex Mono", monospace; color: var(--accent); margin: 0 0 8px; }
+
+  .search { width: 100%; background: var(--card); color: var(--ink); border: 1px solid var(--line);
+            border-radius: 10px; padding: 12px; font: inherit; margin: 18px 0 8px; }
+  details.more summary { color: var(--muted); font-size: 13px; cursor: pointer; padding-block: 6px; }
+  .done { background: var(--card); border: 1px solid var(--accent); border-radius: 12px;
+          padding: 16px; margin-top: 18px; }
+  .done h2 { font: 700 24px/1 "Barlow Condensed", sans-serif; text-transform: uppercase; margin: 0 0 8px; }
+  footer { color: var(--muted); font-size: 11.5px; margin-top: 26px; max-width: 60ch; }
+  [hidden] { display: none !important; }
+</style>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Underdog · Battle Royale · live draft companion</div>
+    <h1 id="title">Draft Companion</h1>
+    <p class="sub" id="subtitle">Pick your lobby seat. During the draft: take the highest name still
+      on your board, tap it when you take it. Tapping ✕ marks someone the room took (optional —
+      the queue works even if you never mark them).</p>
+  </header>
+
+  <div id="seatpick">
+    <div class="seatgrid" id="seatgrid"></div>
+  </div>
+
+  <div id="draft" hidden>
+    <div class="bar">
+      <div class="row1">
+        <span class="onclock" id="onclock"></span>
+        <button class="ghost" id="undo">undo</button>
+        <button class="ghost" id="reset">new draft</button>
+      </div>
+      <div class="chips" id="roster"></div>
+    </div>
+
+    <p class="must" id="must" hidden></p>
+    <div class="qhead"><h2 id="qtitle"></h2><span class="hint" id="qhint"></span></div>
+    <div class="qlist" id="queue"></div>
+
+    <input class="search" id="search" placeholder="search all players (tap = took, ✕ = gone)" autocomplete="off">
+    <div class="qlist" id="searchresults"></div>
+
+    <div class="done" id="done" hidden>
+      <h2>Roster complete</h2>
+      <div class="chips" id="finalroster"></div>
+      <p class="sub" style="margin-top:10px">Send these six names back to Claude to log and grade the entry.</p>
+    </div>
+
+    <footer>Queues are pre-computed by the battle_royale engine (tournament equity vs a
+      calibrated 70k field, duplication sharing included), marginalized over unknown opponent
+      boards. In-page re-ranking applies your actual roster's stack synergies and Underdog
+      legality (1 QB, 1-2 RB, 2-3 WR, 1-2 TE). Availability % is the pre-draft estimate for
+      your seat's pick slots.</footer>
+  </div>
+</div>
+<script>
+const PLAN = __PLAN_JSON__;
+
+const POS_MIN = {QB:1, RB:1, WR:2, TE:1};
+const POS_MAX = {QB:1, RB:2, WR:3, TE:2};
+// How hard roster stack/overlap correlations push the live re-ranking.
+// The pre-computed queue scores assume the modal roster; once the user's
+// actual roster exists, correlation with it is the main new information.
+const SYNERGY_WEIGHT = 1.6;
+// Total roster-synergy push is clamped so a triple stack cannot fully
+// drown value, availability and legality in the ranking.
+const clampSyn = (v) => Math.max(-0.75, Math.min(0.75, v));
+const P = PLAN.players;
+const SYN = {};
+for (const [a, b, d] of PLAN.synergy) {
+  (SYN[a] = SYN[a] || {})[b] = d;
+  (SYN[b] = SYN[b] || {})[a] = d;
+}
+
+let S = null; // {seat, roster:[], gone:[], hist:[]}
+try { S = JSON.parse(localStorage.getItem("br-companion") || "null"); } catch (e) {}
+
+const $ = (id) => document.getElementById(id);
+const save = () => { try { localStorage.setItem("br-companion", JSON.stringify(S)); } catch (e) {} };
+
+function posCounts(roster) {
+  const c = {QB:0, RB:0, WR:0, TE:0};
+  for (const i of roster) c[P[i].pos]++;
+  return c;
+}
+function legalPositions(roster) {
+  const c = posCounts(roster);
+  const left = 6 - roster.length;
+  const needed = Object.entries(POS_MIN).map(([p, m]) => [p, Math.max(m - c[p], 0)]);
+  const needSum = needed.reduce((a, [, n]) => a + n, 0);
+  const ok = new Set();
+  for (const p of Object.keys(POS_MIN)) {
+    if (c[p] >= POS_MAX[p]) continue;
+    const after = {...c}; after[p]++;
+    const needAfter = Object.entries(POS_MIN).reduce((a, [q, m]) => a + Math.max(m - after[q], 0), 0);
+    if (needAfter <= left - 1) ok.add(p);
+  }
+  return {ok, needSum, left, counts: c};
+}
+function synergyWith(i, roster) {
+  let d = 0;
+  for (const r of roster) d += (SYN[i] && SYN[i][r]) || 0;
+  return d;
+}
+function synergyDriver(i, roster) {
+  let best = null, mag = 0;
+  for (const r of roster) {
+    const v = (SYN[i] && SYN[i][r]) || 0;
+    if (Math.abs(v) > Math.abs(mag)) { mag = v; best = r; }
+  }
+  return best === null ? null : {who: best, v: mag};
+}
+function slotFor(roster) {
+  const seatPlan = PLAN.seats[String(S.seat)];
+  let made = 0;
+  for (const sl of seatPlan.slots) {
+    const n = sl.covers_picks.length;
+    if (made + n > roster.length) return {sl, sub: roster.length - made};
+    made += n;
+  }
+  return null;
+}
+
+function render() {
+  const started = S && S.seat;
+  $("seatpick").hidden = !!started;
+  $("draft").hidden = !started;
+  if (!started) return;
+
+  const seatPlan = PLAN.seats[String(S.seat)];
+  const roster = S.roster;
+  $("roster").innerHTML = roster.map(i =>
+    `<span class="chip">${P[i].name} <i>${P[i].pos}·${P[i].team}</i></span>`
+  ).join("") + Array(6 - roster.length).fill('<span class="chip empty">—</span>').join("");
+
+  if (roster.length >= 6) {
+    $("onclock").textContent = `Seat ${S.seat} — done`;
+    $("qtitle").textContent = ""; $("qhint").textContent = "";
+    $("queue").innerHTML = ""; $("must").hidden = true;
+    $("done").hidden = false;
+    $("finalroster").innerHTML = roster.map(i =>
+      `<span class="chip">${P[i].name} <i>${P[i].pos}·${P[i].team}</i></span>`).join("");
+    save(); return;
+  }
+  $("done").hidden = true;
+
+  const cur = slotFor(roster);
+  const pickNo = cur.sl.covers_picks[cur.sub];
+  const isPair = cur.sl.covers_picks.length === 2;
+  $("onclock").innerHTML = `Seat ${S.seat} · <small>pick ${pickNo}${isPair ? ` (turn ${cur.sub + 1}/2)` : ""}</small>`;
+
+  const {ok, needSum, left} = legalPositions(roster);
+  const forced = needSum === left;
+  $("must").hidden = !forced;
+  if (forced) {
+    const c = posCounts(roster);
+    const needs = Object.entries(POS_MIN).filter(([p, m]) => c[p] < m)
+      .map(([p, m]) => `${m - c[p]} ${p}`).join(" + ");
+    $("must").textContent = `Remaining picks must fill: ${needs}`;
+  }
+
+  const taken = new Set([...S.roster, ...S.gone]);
+  let rows = cur.sl.queue
+    .filter(q => !taken.has(q.id) && ok.has(P[q.id].pos))
+    .map(q => ({...q, adj: q.score + SYNERGY_WEIGHT * clampSyn(synergyWith(q.id, roster))}))
+    .sort((a, b) => b.adj - a.adj);
+  // If the precomputed queue thins out (the user's roster diverged from the
+  // modal path — e.g. still needs a QB the plan filled earlier), backfill
+  // from the whole pool by value so a legal pick is always one tap away.
+  if (rows.length < 6) {
+    const have = new Set(rows.map(r => r.id));
+    const fillers = P
+      .filter(pl => !taken.has(pl.id) && !have.has(pl.id) && ok.has(pl.pos))
+      .map(pl => ({id: pl.id, score: 0, eq: null, avail: null, pairs_with: [],
+                   adj: pl.value / 40 + SYNERGY_WEIGHT * clampSyn(synergyWith(pl.id, roster))}))
+      .sort((a, b) => b.adj - a.adj)
+      .slice(0, 8 - rows.length);
+    rows = rows.concat(fillers);
+  }
+
+  $("qtitle").textContent = `Your queue — pick ${pickNo}`;
+  $("qhint").textContent = "take the highest name still on your board";
+  $("queue").innerHTML = rows.slice(0, 12).map((q, k) => {
+    const pl = P[q.id];
+    const syn = synergyWith(q.id, roster);
+    let synBadge = "";
+    if (Math.abs(syn) >= 0.015) {
+      const drv = synergyDriver(q.id, roster);
+      const who = drv ? P[drv.who].name.split(" ").slice(-1)[0] : "";
+      synBadge = syn > 0
+        ? `<span class="syn-badge pos">▲ stack ${who} +${syn.toFixed(2)}</span>`
+        : `<span class="syn-badge neg">▼ overlap ${who} ${syn.toFixed(2)}</span>`;
+    }
+    const pw = (q.pairs_with || []).filter(j => !taken.has(j));
+    const pwTxt = isPair && cur.sub === 0 && pw.length
+      ? ` · pairs: ${pw.map(j => P[j].name.split(" ").slice(-1)[0]).join(", ")}` : "";
+    return `<div class="prow${k === 0 ? " top" : ""}${syn > 0.015 ? " stacked" : ""}" data-id="${q.id}">
+      <span class="rk">${k + 1}</span>
+      <span><span class="nm">${pl.name}</span><span class="pos-tag ${pl.pos}">${pl.pos}·${pl.team}</span>${synBadge}<br>
+        <span class="meta">${Math.round(pl.own * 100)}% rooms · adp ${pl.adp.toFixed(1)}${pwTxt}</span></span>
+      <span class="av">${q.avail == null ? "–" : Math.round(q.avail * 100) + "%"}<br><span style="font-size:10px">avail</span></span>
+      <button class="gonebtn" data-gone="${q.id}" aria-label="mark ${pl.name} gone">✕</button>
+    </div>`;
+  }).join("") || '<p class="sub">Queue exhausted — use search below.</p>';
+  save();
+}
+
+function takePlayer(id) {
+  if (S.roster.length >= 6 || S.roster.includes(id)) return;
+  S.roster.push(id); S.hist.push(["take", id]);
+  S.gone = S.gone.filter(g => g !== id);
+  render(); $("search").value = ""; renderSearch("");
+}
+function markGone(id) {
+  if (S.gone.includes(id) || S.roster.includes(id)) return;
+  S.gone.push(id); S.hist.push(["gone", id]);
+  render(); renderSearch($("search").value);
+}
+function renderSearch(qtext) {
+  const t = qtext.trim().toLowerCase();
+  const box = $("searchresults");
+  if (!t) { box.innerHTML = ""; return; }
+  const taken = new Set(S.roster);
+  const hits = P.filter(pl => pl.name.toLowerCase().includes(t)).slice(0, 6);
+  box.innerHTML = hits.map(pl => {
+    const isGone = S.gone.includes(pl.id), isMine = taken.has(pl.id);
+    const state = isMine ? " · on your roster" : isGone ? " · marked gone" : "";
+    return `<div class="prow" data-id="${pl.id}" style="${isGone || isMine ? "opacity:.45" : ""}">
+      <span class="rk">·</span>
+      <span><span class="nm">${pl.name}</span><span class="pos-tag ${pl.pos}">${pl.pos}·${pl.team}</span><br>
+        <span class="meta">adp ${pl.adp.toFixed(1)} · ${Math.round(pl.own * 100)}% rooms${state}</span></span>
+      <span class="av"></span>
+      <button class="gonebtn" data-gone="${pl.id}">✕</button>
+    </div>`;
+  }).join("");
+}
+
+document.addEventListener("click", (e) => {
+  const gone = e.target.closest("[data-gone]");
+  if (gone) { e.stopPropagation(); markGone(Number(gone.dataset.gone)); return; }
+  const row = e.target.closest("[data-id]");
+  if (row) { takePlayer(Number(row.dataset.id)); return; }
+  const seat = e.target.closest("[data-seat]");
+  if (seat) {
+    S = {seat: Number(seat.dataset.seat), roster: [], gone: [], hist: []};
+    render();
+  }
+});
+$("undo").addEventListener("click", () => {
+  const last = S.hist.pop();
+  if (!last) return;
+  if (last[0] === "take") S.roster = S.roster.filter(i => i !== last[1]);
+  else S.gone = S.gone.filter(i => i !== last[1]);
+  render();
+});
+$("reset").addEventListener("click", () => {
+  if (!confirm("Start a new draft? This clears the current one.")) return;
+  S = null; try { localStorage.removeItem("br-companion"); } catch (e) {}
+  $("seatpick").hidden = false; $("draft").hidden = true;
+});
+$("search").addEventListener("input", (e) => renderSearch(e.target.value));
+
+const grid = $("seatgrid");
+for (let seat = 1; seat <= 6; seat++) {
+  const picks = PLAN.seats[String(seat)].own_picks.join(" · ");
+  grid.insertAdjacentHTML("beforeend",
+    `<button class="seatbtn" data-seat="${seat}"><b>${seat}</b><span>picks ${picks}</span></button>`);
+}
+render();
+</script>

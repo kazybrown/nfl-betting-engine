@@ -173,13 +173,15 @@ def main() -> None:
     # client can re-rank when the user's roster diverges from the modal path.
     cov = opt.cov
     synergy = []
-    top = set(int(i) for i in np.argsort(s.rank)[:110])
+    top = set(int(i) for i in np.argsort(s.rank)[:130])
     for i in range(s.n):
         for j in range(i + 1, s.n):
             if i not in top or j not in top or not s.same_game(i, j):
                 continue
             c = float(cov[i, j])
-            if abs(c) >= 1.5:
+            # Keep weaker (especially negative) pairs too: same-team slot
+            # competition and RB/RB overlap matter to the client re-rank.
+            if abs(c) >= 0.8:
                 synergy.append([i, j, round(0.35 * c / 10.0, 3)])
 
     plan = {
