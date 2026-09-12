@@ -189,3 +189,16 @@ def slate_status(slate: Slate, status: dict[tuple[str, str], str]) -> dict[int, 
         elif len(hits) == 1:
             out[i] = hits[0][1]
     return out
+
+
+# Approximate historical play/sit rates by designation: Questionable players
+# play ~75-80% of the time, Doubtful ~10-15%; Out/inactive is near-certain.
+SIT_PROB = {"Q": 0.22, "D": 0.85, "O": 0.97, "IR": 0.97}
+
+
+def sit_probabilities(slate: Slate, statuses: dict[int, str]) -> np.ndarray:
+    """Per-player inactive probability vector for the engine's sit mixture."""
+    out = np.zeros(slate.n)
+    for i, code in statuses.items():
+        out[i] = SIT_PROB.get(code, 0.0)
+    return out

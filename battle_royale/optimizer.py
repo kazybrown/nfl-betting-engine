@@ -164,7 +164,7 @@ class PickOptimizer:
         if self._scores_cache is None:
             m, c = self.engine.marginals, self.engine.correlation
             key = (
-                f"scores_{_cache.array_hash(m.shape, m.scale, c.cholesky)}"
+                f"scores_{_cache.array_hash(m.shape, m.scale, c.cholesky, self.engine.sit_prob)}"
                 f"_{self.config.n_outcome_sims}_{self.config.seed}"
             )
             self._scores_cache = self._cached(

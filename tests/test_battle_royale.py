@@ -191,6 +191,20 @@ def test_stack_correlation_realized(engine):
 # ----------------------------------------------------------------------
 
 
+def test_sit_risk_mixture_preserves_mean(slate):
+    sit = np.zeros(slate.n)
+    sit[0], sit[3] = 0.25, 0.85
+    eng = BattleRoyaleEngine(slate, seed=5, sit_prob=sit)
+    x = eng.sample_scores(40_000)
+    # Unconditional means still anchor to the projections...
+    assert x[:, 0].mean() == pytest.approx(slate.proj[0], rel=0.05)
+    assert x[:, 3].mean() == pytest.approx(slate.proj[3], rel=0.10)
+    # ...but the sit mass shows up as zeros at the designated rates.
+    assert (x[:, 0] == 0).mean() == pytest.approx(0.25, abs=0.02)
+    assert (x[:, 3] == 0).mean() == pytest.approx(0.85, abs=0.02)
+    assert (x[:, 1] == 0).mean() < 0.01  # healthy players unaffected
+
+
 def test_contest_format_structure():
     from battle_royale.formats import ContestFormat, get_format
 

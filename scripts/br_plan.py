@@ -60,25 +60,18 @@ def sample_board(engine, our_picks: dict[int, int], upto_pick: int, seed: int) -
     return st
 
 
-def build_seat_plan(opt: PickOptimizer, seat0: int, n_boards: int, avail_boards: int,
-                    base_seed: int) -> dict:
+def _plan_path(opt: PickOptimizer, own_slots: list[int], our_picks_init: dict[int, int],
+               avail: dict, n_boards: int, base_seed: int) -> list[dict]:
+    """Plan every own slot not already committed in ``our_picks_init``.
+
+    Committed slots (a branch prefix) condition the boards but produce no
+    entries, so a branch continuation contains exactly the remaining groups.
+    """
     engine = opt.engine
     s = opt.slate
-    own_slots = s.fmt.picks_of_seat(seat0)
-    our_picks: dict[int, int] = {}
-    slots_out = []
-
-    # Availability per own slot from cheap board sims (no optimizer).
-    avail = {}
-    for slot in own_slots:
-        cnt = np.zeros(s.n)
-        for k in range(avail_boards):
-            cnt += sample_board(engine, our_picks, slot, base_seed + 50_000 + slot * 1000 + k).avail
-        avail[slot] = cnt / avail_boards
-        # our_picks not yet decided for this pass; modal path fills in below,
-        # so early-slot availability ignores our own later picks (harmless).
-
-    handled: set[int] = set()
+    our_picks = dict(our_picks_init)
+    slots_out: list[dict] = []
+    handled: set[int] = set(our_picks)
     for slot in own_slots:
         if slot in handled:
             continue
@@ -86,6 +79,9 @@ def build_seat_plan(opt: PickOptimizer, seat0: int, n_boards: int, avail_boards:
         eq_sum: dict[int, float] = defaultdict(float)
         eq_n: dict[int, int] = defaultdict(int)
         pair_partner: dict[int, Counter] = defaultdict(Counter)
+        pair_votes: Counter = Counter()
+        pair_eq: dict[tuple, float] = defaultdict(float)
+        pair_n: dict[tuple, int] = defaultdict(int)
         mode = "single"
         for k in range(n_boards):
             st = sample_board(engine, our_picks, slot, base_seed + slot * 1000 + k)
@@ -101,6 +97,10 @@ def build_seat_plan(opt: PickOptimizer, seat0: int, n_boards: int, avail_boards:
                 if len(ids) == 2:
                     pair_partner[ids[0]][ids[1]] += 1
                     pair_partner[ids[1]][ids[0]] += 1
+                    pk = tuple(sorted(ids))
+                    pair_votes[pk] += w
+                    pair_eq[pk] += o["expected_payout"]
+                    pair_n[pk] += 1
         queue = sorted(votes, key=lambda i: (-votes[i], -eq_sum[i] / max(eq_n[i], 1)))[:16]
         slot_avail = avail[slot]
         entry = {
@@ -122,17 +122,21 @@ def build_seat_plan(opt: PickOptimizer, seat0: int, n_boards: int, avail_boards:
         # Modal path: commit the top choice (both names for a pair) so later
         # slots condition on a realistic own roster.
         if mode == "pair":
-            top_pair = None
-            best = -1.0
-            for a in queue[:6]:
-                for b, _ in pair_partner[a].most_common(1):
-                    v = votes[a] + votes[b]
-                    if v > best:
-                        best, top_pair = v, (a, b)
+            # Back-to-back turn picks are ONE decision: rank the actual joint
+            # options the optimizer scored, not the two names independently.
+            top_pairs = sorted(pair_votes, key=lambda t: -pair_votes[t])[:4]
+            entry["pair_options"] = [
+                {
+                    "ids": [int(a) for a in pk],
+                    "score": round(pair_votes[pk] / n_boards, 3),
+                    "eq": round(pair_eq[pk] / max(pair_n[pk], 1), 2),
+                }
+                for pk in top_pairs
+            ]
+            top_pair = tuple(top_pairs[0]) if top_pairs else tuple(queue[:2])
             nxt = slot + 1
-            if top_pair:
-                our_picks[slot], our_picks[nxt] = int(top_pair[0]), int(top_pair[1])
-            entry["modal"] = [int(x) for x in (top_pair or queue[:2])]
+            our_picks[slot], our_picks[nxt] = int(top_pair[0]), int(top_pair[1])
+            entry["modal"] = [int(x) for x in top_pair]
             entry["covers_picks"] = [slot, nxt]
             handled.add(nxt)
         else:
@@ -141,7 +145,53 @@ def build_seat_plan(opt: PickOptimizer, seat0: int, n_boards: int, avail_boards:
             entry["covers_picks"] = [slot]
         slots_out.append(entry)
 
-    return {"seat": seat0 + 1, "own_picks": own_slots, "slots": slots_out}
+    return slots_out
+
+
+def build_seat_plan(opt: PickOptimizer, seat0: int, n_boards: int, avail_boards: int,
+                    base_seed: int, alt_k: int = 2, alt_boards: int = 6) -> dict:
+    engine = opt.engine
+    s = opt.slate
+    own_slots = s.fmt.picks_of_seat(seat0)
+
+    # Availability per own slot from cheap board sims (no optimizer); shared
+    # by every branch — early-slot availability ignores our own later picks
+    # (harmless), so branch prefixes don't change it materially.
+    avail = {}
+    for slot in own_slots:
+        cnt = np.zeros(s.n)
+        for k in range(avail_boards):
+            cnt += sample_board(engine, {}, slot, base_seed + 50_000 + slot * 1000 + k).avail
+        avail[slot] = cnt / avail_boards
+
+    slots_out = _plan_path(opt, own_slots, {}, avail, n_boards, base_seed)
+    plan = {"seat": seat0 + 1, "own_picks": own_slots, "slots": slots_out}
+
+    # Branch-conditional continuations: the equity votes of later slots are
+    # conditioned on the FIRST group's actual selection, not just the modal
+    # one, so the client stays on a fresh path when the user opens
+    # differently. Keys are the sorted first-group pick ids joined by "-".
+    first = slots_out[0] if slots_out else None
+    if first and alt_k > 0:
+        covers = first["covers_picks"]
+        if first.get("pair_options"):
+            cands = [tuple(po["ids"]) for po in first["pair_options"]]
+        else:
+            cands = [(q["id"],) for q in first["queue"]]
+        modal = tuple(sorted(first["modal"]))
+        branches = [modal] + [c for c in cands if tuple(sorted(c)) != modal][:alt_k]
+        alt_paths = {}
+        for pi, key in enumerate(branches):
+            if pi == 0:
+                cont = slots_out[1:]  # the modal continuation is the default path
+            else:
+                picks = {covers[j]: int(key[j]) for j in range(len(covers))}
+                cont = _plan_path(opt, own_slots, picks, avail, alt_boards,
+                                  base_seed + 7919 * (pi + 1))
+            alt_paths["-".join(str(x) for x in sorted(key))] = cont
+        plan["alt_paths"] = alt_paths
+
+    return plan
 
 
 def main() -> None:
@@ -152,7 +202,10 @@ def main() -> None:
                     help="contest format key from battle_royale/data/formats.json")
     ap.add_argument("--seats", nargs="+", type=int, default=None,
                     help="seats to plan (default: all)")
-    ap.add_argument("--boards", type=int, default=6)
+    ap.add_argument("--boards", type=int, default=10)
+    ap.add_argument("--alt-paths", type=int, default=2,
+                    help="branch continuations for top non-modal opening picks")
+    ap.add_argument("--alt-boards", type=int, default=6)
     ap.add_argument("--avail-boards", type=int, default=250)
     ap.add_argument("--contest-size", type=int, default=None,
                     help="entries in the contest (default: the format's field size)")
@@ -163,7 +216,12 @@ def main() -> None:
     ap.add_argument("--week", type=int, default=None)
     args = ap.parse_args()
 
-    from battle_royale.external import load_game_lines, load_player_status, slate_status
+    from battle_royale.external import (
+        load_game_lines,
+        load_player_status,
+        sit_probabilities,
+        slate_status,
+    )
     from battle_royale.slate import Slate
 
     fmt = get_format(args.fmt)
@@ -182,7 +240,8 @@ def main() -> None:
             if code in ("O", "IR"):
                 slate_obj.room_drafted_rate[i] = min(slate_obj.room_drafted_rate[i], 0.01)
 
-    engine = BattleRoyaleEngine(slate_obj, seed=args.seed, game_lines=lines)
+    sit = sit_probabilities(slate_obj, statuses) if statuses else None
+    engine = BattleRoyaleEngine(slate_obj, seed=args.seed, game_lines=lines, sit_prob=sit)
     # Offline generation: fast rollout counts, but full-size outcome sims and
     # fields — the jackpot region is too noisy under the live-draft preset,
     # and the heavy artifacts are disk-cached anyway.
@@ -252,7 +311,8 @@ def main() -> None:
     for lobby_seat in seats:
         t0 = time.time()
         plan["seats"][str(lobby_seat)] = build_seat_plan(
-            opt, lobby_seat - 1, args.boards, args.avail_boards, args.seed
+            opt, lobby_seat - 1, args.boards, args.avail_boards, args.seed,
+            alt_k=args.alt_paths, alt_boards=args.alt_boards,
         )
         print(f"seat {lobby_seat} planned in {time.time() - t0:.0f}s", flush=True)
 

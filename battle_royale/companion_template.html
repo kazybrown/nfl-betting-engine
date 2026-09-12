@@ -118,6 +118,8 @@
   .slid { font: 500 12px/1.6 "IBM Plex Mono", monospace; color: var(--accent);
           border: 1px dashed var(--accent); border-radius: 8px; padding: 8px 10px;
           margin: 0 0 10px; }
+  .slid.pairs { color: var(--good, #3f7d4e); border-color: var(--good, #3f7d4e); }
+  .slid.pairs i { color: var(--muted); font-style: normal; }
   .prow .av { font: 500 12px/1 "IBM Plex Mono", monospace; color: var(--muted); text-align: right; }
   .prow .gonebtn { background: none; border: 1px solid var(--line); color: var(--muted);
                    border-radius: 8px; width: 40px; height: 40px; font-size: 15px; cursor: pointer; }
@@ -160,6 +162,7 @@
 
     <p class="must" id="must" hidden></p>
     <p class="slid" id="slid" hidden></p>
+    <p class="slid pairs" id="pairs" hidden></p>
     <div class="qhead"><h2 id="qtitle"></h2><span class="hint" id="qhint"></span></div>
     <div class="qlist" id="queue"></div>
 
@@ -173,8 +176,9 @@
     </div>
 
     <footer>Objective: win the contest. Each card's WIN SCORE = value backbone (ETR
-      rank + the engine's tournament-equity votes, scored for 1st place vs a
-      calibrated 70k field with duplicate prize sharing) plus the labeled chips:
+      rank + the engine's tournament-equity votes, scored under the real prize
+      curve vs a calibrated full-size field with duplicate prize sharing, and
+      re-branched for your actual opening pick) plus the labeled chips:
       stack/overlap correlation with your roster, can wait (the equity a player
       keeps if passed on — his odds of surviving to your next real turn times his
       worth, less what taking him now displaces from your remaining picks), leverage
@@ -224,8 +228,9 @@ const phi = (x) => 1 / (1 + Math.exp(-1.702 * x));  // fast normal CDF approx
 // under the calibrated latent-market model — a player is targeted with
 // probability own% and, if targeted, goes near his ADP. Marked-gone players
 // are excluded outright; this handles everyone the user did NOT mark.
-function pAvail(pl, pickNo) {
-  const p = 1 - pl.own * phi((pickNo - 0.5 - pl.adp) / ADP_SIGMA);
+function pAvail(pl, pickNo, shift) {
+  const adp = pl.adp - (shift || 0);
+  const p = 1 - pl.own * phi((pickNo - 0.5 - adp) / ADP_SIGMA);
   return Math.max(p, 0.02);
 }
 
@@ -287,10 +292,22 @@ function synergyDriver(i, roster) {
   }
   return best === null ? null : {who: best, v: mag};
 }
+// Branch-conditional paths: later slots' equity votes were precomputed for
+// each plausible opening pick, so follow the continuation matching what the
+// user ACTUALLY took first (modal path is the fallback).
+function activeSlots(seatPlan, roster) {
+  const first = seatPlan.slots[0];
+  if (!first || !seatPlan.alt_paths) return seatPlan.slots;
+  const n = first.covers_picks.length;
+  if (roster.length < n) return seatPlan.slots;
+  const key = roster.slice(0, n).map(Number).sort((a, b) => a - b).join("-");
+  const alt = seatPlan.alt_paths[key];
+  return alt ? [first].concat(alt) : seatPlan.slots;
+}
 function slotFor(roster) {
   const seatPlan = PLAN.seats[String(S.seat)];
   let made = 0;
-  for (const sl of seatPlan.slots) {
+  for (const sl of activeSlots(seatPlan, roster)) {
     const n = sl.covers_picks.length;
     if (made + n > roster.length) return {sl, sub: roster.length - made};
     made += n;
@@ -337,6 +354,14 @@ function render() {
   }
 
   const taken = new Set([...S.roster, ...S.gone]);
+  // Position-run inference: marked opponent picks whose ADP sits well past
+  // the current pick are reaches — the market is running that position hot,
+  // so its survival odds tighten (only activates when the user marks picks).
+  const runShift = {QB: 0, RB: 0, WR: 0, TE: 0};
+  for (const g of S.gone.slice(-8)) {
+    if (P[g].adp > pickNo + 2) runShift[P[g].pos] = Math.min(runShift[P[g].pos] + 1.2, 4);
+  }
+  const runsOn = Object.keys(runShift).filter(p => runShift[p] >= 2.4);
   // Ranking = optimal construction GIVEN THE ROSTER SO FAR, with two
   // overrides: dropped values and high positive correlation.
   //   1. Base worth: ETR rank + stack correlation with your picks + soft
@@ -374,8 +399,9 @@ function render() {
       };
       const u = parts.value + parts.stack + parts.need + parts.leverage + parts.injury;
       return {id: pl.id, pos: pl.pos, u, injGone, parts,
-              pav: pAvail(pl, pickNo),
-              pavWait: horizon ? pAvail(pl, horizon) : 0,
+              eq: q ? q.eq : null,
+              pav: pAvail(pl, pickNo, runShift[pl.pos]),
+              pavWait: horizon ? pAvail(pl, horizon, runShift[pl.pos]) : 0,
               pairs_with: q ? q.pairs_with : []};
     });
 
@@ -416,7 +442,19 @@ function render() {
   }
 
   $("qtitle").textContent = `Your queue — pick ${pickNo}`;
-  $("qhint").textContent = "win score = 1st-place equity · gaps show the cost of passing";
+  const runTxt = runsOn.length ? ` · ⚡ ${runsOn.join("/")} run detected` : "";
+  $("qhint").textContent = "win score = tournament equity · gaps show the cost of passing" + runTxt;
+  // Back-to-back turn: the engine scored the TURN as one joint decision —
+  // show the top pairs so both names read as a single call.
+  const pairStrip = (isPair && cur.sub === 0 && cur.sl.pair_options)
+    ? cur.sl.pair_options
+        .filter(po => po.ids.every(j => !taken.has(j)))
+        .slice(0, 3)
+        .map(po => `<b>${po.ids.map(j => P[j].name.split(" ").slice(-1)[0]).join(" + ")}</b> <i>EV ${po.eq.toFixed(1)}x</i>`)
+        .join(" &nbsp;·&nbsp; ")
+    : "";
+  $("pairs").hidden = !pairStrip;
+  if (pairStrip) $("pairs").innerHTML = "best turn pairs: " + pairStrip;
   const live = rows.filter(r => !r.gone);
   const topAdj = live.length ? live[0].adj : (rows[0] ? rows[0].adj : 1);
   const lastShown = rows.slice(0, 12);
@@ -463,7 +501,7 @@ function render() {
     return `<div class="prow${k === 0 ? " top" : ""}${synW > 0.05 ? " stacked" : ""}${likelyGone ? " dim" : ""}" data-id="${q.id}">
       <span class="rk">${k + 1}</span>
       <span><span class="nm">${pl.name}</span><span class="pos-tag ${pl.pos}">${pl.pos}·${pl.team}</span>${synBadge}${mathChips}${injBadge}${goneBadge}<br>
-        <span class="meta">ETR ${pl.rank} · ${Math.round(pl.own * 100)}% rooms · adp ${pl.adp.toFixed(1)} · board ${Math.round(q.pav * 100)}%${ouTxt}${pwTxt}</span></span>
+        <span class="meta">ETR ${pl.rank}${q.eq ? ` · EV ${q.eq.toFixed(1)}x` : ""} · ${Math.round(pl.own * 100)}% rooms · adp ${pl.adp.toFixed(1)} · board ${Math.round(q.pav * 100)}%${ouTxt}${pwTxt}</span></span>
       ${scoreCell}
       <button class="gonebtn" data-gone="${q.id}" aria-label="mark ${pl.name} gone">✕</button>
       <span class="scorebar" style="width:${barW}%"></span>

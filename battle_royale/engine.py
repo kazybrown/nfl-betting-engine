@@ -24,12 +24,23 @@ class BattleRoyaleEngine:
         policy: OpponentPolicy | None = None,
         seed: int | None = None,
         game_lines: dict[str, dict] | None = None,
+        sit_prob: np.ndarray | None = None,
     ):
         """``game_lines`` (from :func:`battle_royale.external.load_game_lines`)
         tilts same-game correlations by each game's Vegas total and is kept on
-        the engine for downstream display."""
+        the engine for downstream display. ``sit_prob`` (per player, 0..0.97)
+        adds inactive-risk bimodality: with that probability the player
+        contributes ~0; otherwise his draw is scaled by 1/(1-p) so the
+        unconditional mean still equals the slate projection (which already
+        prices expected availability)."""
         self.slate = slate
         self.game_lines = game_lines or {}
+        if sit_prob is None:
+            self.sit_prob = np.zeros(slate.n)
+        else:
+            self.sit_prob = np.clip(np.asarray(sit_prob, dtype=float), 0.0, 0.97)
+            if self.sit_prob.shape != (slate.n,):
+                raise ValueError("sit_prob must have one entry per slate player")
         self.marginals = marginals or MarginalModel.from_slate(slate)
         if correlation is None:
             team_env = None
@@ -61,7 +72,14 @@ class BattleRoyaleEngine:
         rng = rng or self.rng
         z = self.correlation.latent_normals(n_sims, rng)
         u = np.clip(norm.cdf(z), 1e-9, 1 - 1e-9)
-        return self.marginals.ppf(u)
+        scores = self.marginals.ppf(u)
+        risky = np.where(self.sit_prob > 0)[0]
+        if len(risky):
+            # Mean-preserving inactive mixture: sit -> ~0, play -> scaled up.
+            p = self.sit_prob[risky]
+            plays = rng.random((n_sims, len(risky))) >= p[None, :]
+            scores[:, risky] = np.where(plays, scores[:, risky] / (1.0 - p[None, :]), 0.0)
+        return scores
 
     def roster_scores(self, scores: np.ndarray, rosters: np.ndarray) -> np.ndarray:
         """Sum player scores per roster: (n_sims, n_rosters)."""

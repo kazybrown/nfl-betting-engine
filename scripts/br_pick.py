@@ -46,17 +46,26 @@ def build_optimizer(
     season: int | None = None, week: int | None = None,
     payouts: str | None = None, fmt_key: str = "battle_royale",
 ) -> PickOptimizer:
-    game_lines = {}
-    if season and week:
-        from battle_royale.external import load_game_lines
-
-        game_lines = load_game_lines(season, week)
     from battle_royale.equity import load_payout_table
     from battle_royale.slate import Slate
 
     fmt = get_format(fmt_key)
     contest_size = contest_size or fmt.default_contest_size
-    engine = BattleRoyaleEngine(Slate.from_csv(csv, fmt=fmt), seed=seed, game_lines=game_lines)
+    slate = Slate.from_csv(csv, fmt=fmt)
+    game_lines, sit = {}, None
+    if season and week:
+        from battle_royale.external import (
+            load_game_lines,
+            load_player_status,
+            sit_probabilities,
+            slate_status,
+        )
+
+        game_lines = load_game_lines(season, week)
+        statuses = slate_status(slate, load_player_status(season, week))
+        if statuses:
+            sit = sit_probabilities(slate, statuses)
+    engine = BattleRoyaleEngine(slate, seed=seed, game_lines=game_lines, sit_prob=sit)
     config = OptimizerConfig() if full else OptimizerConfig.fast()
     config.seed = seed
     config.cache_dir = str(DEFAULT_CACHE_DIR)
