@@ -30,14 +30,13 @@ def underdog_points(df: pd.DataFrame) -> pd.Series:
     interceptions = col("passing_interceptions")
     if "passing_interceptions" not in df.columns:
         interceptions = col("interceptions")
-    fumbles_lost = (
-        col("rushing_fumbles_lost") + col("receiving_fumbles_lost") + col("sack_fumbles_lost")
-    )
-    if (
-        "rushing_fumbles_lost" not in df.columns
-        and "fumbles_lost" in df.columns
-    ):
+    split_fumble_cols = ("rushing_fumbles_lost", "receiving_fumbles_lost", "sack_fumbles_lost")
+    if any(c in df.columns for c in split_fumble_cols):
+        fumbles_lost = sum(col(c) for c in split_fumble_cols)
+    elif "fumbles_lost" in df.columns:
         fumbles_lost = col("fumbles_lost")
+    else:
+        fumbles_lost = col("fumbles_lost")  # all-zero series; no fumble data
     return (
         0.04 * col("passing_yards")
         + 4.0 * col("passing_tds")
@@ -99,10 +98,18 @@ def add_preweek_anchor(
         return s.shift(1).ewm(alpha=ewm_alpha, adjust=False, min_periods=1).mean()
 
     out["_player_prior"] = out.groupby("player_id", group_keys=False)["points"].apply(_lagged_ewm)
-    out["_pos_prior"] = (
-        out.groupby("position", group_keys=False)["points"]
-        .apply(lambda s: s.expanding(min_periods=1).mean().shift(1))
+    # Position prior must lag by WEEK, not by row: a row-level expanding mean
+    # shifted by one row still contains other players' same-week outcomes.
+    week_pos = (
+        out.groupby(["position", "time_id"])["points"]
+        .agg(["sum", "count"])
+        .groupby(level="position")
+        .cumsum()
+        .groupby(level="position")
+        .shift(1)
     )
+    pos_prior = (week_pos["sum"] / week_pos["count"]).rename("_pos_prior")
+    out = out.merge(pos_prior, left_on=["position", "time_id"], right_index=True, how="left")
     out["_prior_games"] = out.groupby("player_id").cumcount()
     use_player = (out["_prior_games"] >= min_player_games) & out["_player_prior"].notna()
     out["anchor"] = np.where(use_player, out["_player_prior"], out["_pos_prior"])

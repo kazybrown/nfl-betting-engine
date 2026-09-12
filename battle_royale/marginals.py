@@ -82,26 +82,38 @@ class MarginalModel:
         table = _load_table(table_path)
         cv2 = np.empty(slate.n)
         for pos_idx, pos in enumerate(POSITIONS):
-            buckets = table["positions"][pos]["buckets"]
-            anchors = np.array([b["anchor"] for b in buckets], dtype=float)
+            buckets = table.get("positions", {}).get(pos, {}).get("buckets") or [
+                {"anchor": a, "mean_points": a, "cv2": c} for a, c in _FALLBACK_CV2[pos]
+            ]
+            # Prefer the realized conditional mean as the curve coordinate
+            # (matches what a sharp projection estimates); fall back to the
+            # legacy anchor coordinate for older tables.
+            coords = np.array(
+                [b.get("mean_points", b["anchor"]) for b in buckets], dtype=float
+            )
             values = np.array([b["cv2"] for b in buckets], dtype=float)
-            order = np.argsort(anchors)
-            anchors, values = anchors[order], values[order]
+            order = np.argsort(coords)
+            coords, values = coords[order], values[order]
             mask = slate.pos == pos_idx
-            cv2[mask] = np.interp(slate.proj[mask], anchors, values)
+            cv2[mask] = np.interp(slate.proj[mask], coords, values)
 
+        mean = np.maximum(slate.proj, 1e-6)
         if ceiling_tilt > 0.0:
-            ratio = np.maximum(slate.ceiling / np.maximum(slate.proj, 1e-6), 1.01)
-            tilt = np.ones(slate.n)
-            for pos_idx in range(len(POSITIONS)):
-                mask = slate.pos == pos_idx
-                med = float(np.median(ratio[mask])) if mask.any() else 1.0
-                tilt[mask] = np.clip((ratio[mask] / max(med, 1e-6)) ** ceiling_tilt, 0.75, 1.35)
+            # Compare the slate's Ceiling to the untilted model's own p90:
+            # a player whose stated ceiling exceeds what the fitted curve
+            # already implies gets wider tails, and vice versa. Comparing to
+            # the position-median ceiling/projection ratio instead would
+            # mechanically re-tilt the curve along the projection axis
+            # (ceiling/proj falls with projection because CV does).
+            base_var = np.maximum(mean**2 * cv2, 1e-6)
+            base_shape = np.maximum(mean**2 / base_var, MIN_GAMMA_SHAPE)
+            implied_p90 = gamma.ppf(0.90, a=base_shape, scale=mean / base_shape)
+            ratio = slate.ceiling / np.maximum(implied_p90, 1e-6)
+            tilt = np.clip(ratio**ceiling_tilt, 0.75, 1.35)
             # Tilt acts on CV, so CV^2 picks up the square.
             cv2 = cv2 * tilt**2
 
         cv2 = cv2 * cv_scale**2
-        mean = np.maximum(slate.proj, 1e-6)
         variance = np.maximum(mean**2 * cv2, 1e-6)
         shape = np.maximum(mean**2 / variance, MIN_GAMMA_SHAPE)
         # Preserve the projection as the exact mean: scale = mean / shape.

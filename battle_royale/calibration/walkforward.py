@@ -80,9 +80,15 @@ def walk_forward(
     rng = np.random.default_rng(seed)
     zcut = float(norm.ppf(tail_q))
 
+    eligible = [tid for i, tid in enumerate(tids) if i >= min_train_weeks]
+    if max_folds is not None:
+        # Validate the MOST RECENT weeks, not the earliest eligible ones.
+        eligible = eligible[-max_folds:]
+    eligible_set = set(eligible)
+
     folds = []
     for i, tid in enumerate(tids):
-        if i < min_train_weeks:
+        if tid not in eligible_set:
             continue
         train = weekly[weekly["time_id"] < tid]
         test = weekly[weekly["time_id"] == tid]

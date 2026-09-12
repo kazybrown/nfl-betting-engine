@@ -79,11 +79,19 @@ class Slate:
         self.teams = np.array([p.team for p in self.players], dtype=object)
         self.opps = np.array([p.opponent for p in self.players], dtype=object)
 
+    REQUIRED_COLUMNS = ("Player", "Position", "Team", "Opponent", "Rank", "ADP",
+                        "Proj", "Ceiling", "Own %")
+
     @classmethod
     def from_csv(cls, path: str | Path) -> Slate:
         players: list[Player] = []
         with open(path, newline="", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
+            missing = [c for c in cls.REQUIRED_COLUMNS if c not in (reader.fieldnames or [])]
+            if missing:
+                # Own % drives the entire opponent model; silently defaulting
+                # any of these to zero would corrupt the field simulation.
+                raise ValueError(f"slate CSV {path} is missing columns: {missing}")
             for row in reader:
                 position = row["Position"].strip().upper()
                 if position not in POSITIONS:

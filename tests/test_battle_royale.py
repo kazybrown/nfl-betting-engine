@@ -227,10 +227,16 @@ def test_field_analytics_counts(slate):
 # ----------------------------------------------------------------------
 
 
-def test_payout_curve_steps():
-    curve = PayoutCurve([(0.001, 100.0), (0.10, 2.0)])
-    pays = curve.payout(np.array([0.0005, 0.05, 0.5]))
-    assert list(pays) == [100.0, 2.0, 0.0]
+def test_payout_curve_ranks():
+    from battle_royale.equity import _RankPayout
+
+    curve = PayoutCurve([(1, 1000.0), (0.001, 100.0), (0.10, 2.0)])
+    rp = _RankPayout(curve, 10_000)
+    # Winner tier is absolute rank 1; fraction tiers scale with contest size.
+    assert list(rp.payout(np.array([1.0, 5.0, 500.0, 5000.0]))) == [1000.0, 100.0, 2.0, 0.0]
+    # Range mean over a tied block spanning tiers pools the prizes.
+    block = rp.range_mean(np.array([1.0]), np.array([3.0]))
+    assert 100.0 < block[0] < 1000.0
 
 
 def test_better_roster_higher_equity(engine):
@@ -321,6 +327,7 @@ def optimizer(engine):
         n_rollouts=12,
         n_outcome_sims=200,
         eval_field_entries=300,
+        dup_field_entries=300,
         n_survival_sims=40,
         pair_top_k=4,
         seed=13,

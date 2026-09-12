@@ -30,18 +30,31 @@ def fit_dispersion(df: pd.DataFrame) -> dict:
     out: dict = {"positions": {}}
     for pos in POSITIONS:
         d = df[df["position"] == pos]
+        if len(d) == 0:
+            out["positions"][pos] = {"buckets": []}
+            continue
         n_buckets = N_BUCKETS[pos]
         qs = np.quantile(d["anchor"], np.linspace(0, 1, n_buckets + 1))
         qs = np.unique(qs)
         buckets = []
-        for lo, hi in zip(qs[:-1], qs[1:]):
-            m = d[(d["anchor"] >= lo) & (d["anchor"] <= hi)]
+        for k, (lo, hi) in enumerate(zip(qs[:-1], qs[1:])):
+            # Half-open bins (last bin closed) so boundary rows land once.
+            if k == len(qs) - 2:
+                m = d[(d["anchor"] >= lo) & (d["anchor"] <= hi)]
+            else:
+                m = d[(d["anchor"] >= lo) & (d["anchor"] < hi)]
             if len(m) < MIN_BUCKET_ROWS:
                 continue
             mean_pts = float(m["points"].mean())
             var_pts = float(m["points"].var(ddof=1))
             buckets.append(
                 {
+                    # "mean_points" is the curve's interpolation coordinate:
+                    # anchors are unregressed EWM estimates, so the bucket's
+                    # realized conditional mean (what a sharp projection
+                    # estimates) sits below the mean anchor at the top of the
+                    # range; querying cv2 at the anchor coordinate would
+                    # overstate variance for high projections by 10-30%.
                     "anchor": float(m["anchor"].mean()),
                     "mean_points": mean_pts,
                     "cv2": var_pts / max(mean_pts, 1e-6) ** 2,

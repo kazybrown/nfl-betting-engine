@@ -40,6 +40,12 @@ class OptimizerConfig:
     n_rollouts: int = 120
     n_outcome_sims: int = 1500
     eval_field_entries: int = 3600
+    # Exact-duplicate counts come from a larger field than the scoring field:
+    # at contest scale, one sampled copy in a small field converts to dozens
+    # of expected contest copies, quantizing the sharing penalty. A 24k-entry
+    # duplication reference (built once per slate) resolves ~3 contest copies
+    # per sampled copy at a 70k contest.
+    dup_field_entries: int = 24_000
     n_survival_sims: int = 300
     ceiling_lambda: float = 0.5
     cov_weight: float = 0.35
@@ -56,6 +62,7 @@ class OptimizerConfig:
             n_rollouts=48,
             n_outcome_sims=600,
             eval_field_entries=1800,
+            dup_field_entries=9_000,
             n_survival_sims=150,
             pair_top_k=6,
         )
@@ -75,6 +82,7 @@ class PickOptimizer:
         self._rng = np.random.default_rng(self.config.seed)
         self._field: np.ndarray | None = None
         self._analytics: FieldAnalytics | None = None
+        self._dup_analytics: FieldAnalytics | None = None
         self._values: np.ndarray | None = None
         self._cov: np.ndarray | None = None
 
@@ -113,6 +121,20 @@ class PickOptimizer:
         if self._analytics is None:
             self._analytics = FieldAnalytics(self.slate, self.field)
         return self._analytics
+
+    @property
+    def dup_analytics(self) -> FieldAnalytics:
+        """Duplication reference: a larger field, built once, for copy counts."""
+        if self._dup_analytics is None:
+            n = self.config.dup_field_entries
+            if n <= self.config.eval_field_entries:
+                self._dup_analytics = self.analytics
+            else:
+                rng = np.random.default_rng(self.config.seed + 2)
+                self._dup_analytics = FieldAnalytics(
+                    self.slate, generate_field(self.engine.policy, n, rng)
+                )
+        return self._dup_analytics
 
     # ------------------------------------------------------------------
     # Completion policy for our own future picks inside rollouts
@@ -226,12 +248,18 @@ class PickOptimizer:
         flat = completed.reshape(-1, 6)
         keys = np.sort(flat, axis=1)
         uniq, inverse = np.unique(keys, axis=0, return_inverse=True)
-        dup_counts = self.analytics.roster_copies(uniq)
+        dup_ref = self.dup_analytics
+        dup_counts = dup_ref.roster_copies(uniq)
         scores = self.engine.sample_scores(
             cfg.n_outcome_sims, np.random.default_rng(cfg.seed + 999)
         )
         metrics = self.tournament.evaluate_rosters(
-            scores, self.field, uniq, dup_counts, chunk=cfg.equity_chunk
+            scores,
+            self.field,
+            uniq,
+            dup_counts,
+            dup_reference_entries=dup_ref.n_entries,
+            chunk=cfg.equity_chunk,
         )
         payouts = np.array([m["expected_payout"] for m in metrics])[inverse].reshape(
             len(actions), cfg.n_rollouts

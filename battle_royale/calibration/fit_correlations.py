@@ -82,6 +82,11 @@ def collect_pairs(df: pd.DataFrame) -> pd.DataFrame:
         recs = list(g.itertuples())
         for a, b in combinations(recs, 2):
             same = a.team == b.team
+            # Canonical order: (x, y) always follows the relation key's
+            # position order (QB first, then RB/WR/TE), so downstream
+            # per-position thresholds pair with the right element.
+            if _POS_ORDER[b.position] < _POS_ORDER[a.position]:
+                a, b = b, a
             key = _pair_key(a.position, b.position)
             rel = ("same" if same else "opp") + ":" + key
             rows.append((rel, a.z, b.z))
