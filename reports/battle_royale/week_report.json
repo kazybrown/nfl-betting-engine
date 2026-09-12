@@ -1,0 +1,1521 @@
+{
+  "slate_players": 150,
+  "contest_size": 70000,
+  "marginal_table": "nflverse weekly stats 2018-2025 REG, Underdog scoring, lagged-EWM anchor buckets",
+  "correlation_table": "nflverse weekly stats 2018-2025 REG, Underdog scoring, standardized lagged-anchor residual pairs, Fisher shrinkage n0=300 toward task-2 DK-grid priors",
+  "field_calibration": {
+    "entries": 3600,
+    "mae_all_pct": 1.6637777777777778,
+    "mae_top36_pct": 1.6472222222222233,
+    "corr_room_rate": 0.9976670016236109
+  },
+  "field_duplication": {
+    "entries": 3600,
+    "distinct_rosters": 3560,
+    "unique_entry_share": 0.9777777777777777,
+    "duplicated_entry_share": 0.022222222222222254,
+    "max_exact_copies": 2,
+    "copy_count_histogram": {
+      "1": 3520,
+      "2": 40
+    }
+  },
+  "field_construction": {
+    "avg_positions": {
+      "QB": 1.0,
+      "RB": 1.8052777777777778,
+      "WR": 2.1777777777777776,
+      "TE": 1.0169444444444444
+    },
+    "flex_share": {
+      "RB": 0.8052777777777778,
+      "WR": 0.17777777777777778,
+      "TE": 0.016944444444444446
+    }
+  },
+  "field_score_distribution": {
+    "p0.5": 83.80472539434663,
+    "p0.9": 111.38626944669666,
+    "p0.99": 134.15439501998605,
+    "p0.999": 149.09467793892318,
+    "sample_max_mean": 159.13745528392667,
+    "sample_max_p10": 135.4582941510753,
+    "sample_max_p90": 185.5123891112212,
+    "sample_entries": 3600
+  },
+  "survival": {
+    "Jahmyr Gibbs": {
+      "7": 0.0064,
+      "8": 0.0044,
+      "13": 0.0004,
+      "18": 0.0,
+      "19": 0.0,
+      "24": 0.0,
+      "25": 0.0,
+      "30": 0.0,
+      "31": 0.0
+    },
+    "Ja'Marr Chase": {
+      "7": 0.0256,
+      "8": 0.0048,
+      "13": 0.0,
+      "18": 0.0,
+      "19": 0.0,
+      "24": 0.0,
+      "25": 0.0,
+      "30": 0.0,
+      "31": 0.0
+    },
+    "Amon-Ra St. Brown": {
+      "7": 0.0848,
+      "8": 0.0272,
+      "13": 0.0,
+      "18": 0.0,
+      "19": 0.0,
+      "24": 0.0,
+      "25": 0.0,
+      "30": 0.0,
+      "31": 0.0
+    },
+    "Bijan Robinson": {
+      "7": 0.038,
+      "8": 0.0284,
+      "13": 0.0,
+      "18": 0.0,
+      "19": 0.0,
+      "24": 0.0,
+      "25": 0.0,
+      "30": 0.0,
+      "31": 0.0
+    },
+    "Jonathan Taylor": {
+      "7": 0.2496,
+      "8": 0.2048,
+      "13": 0.016,
+      "18": 0.0004,
+      "19": 0.0,
+      "24": 0.0,
+      "25": 0.0,
+      "30": 0.0,
+      "31": 0.0
+    },
+    "De'Von Achane": {
+      "7": 0.43,
+      "8": 0.3736,
+      "13": 0.0428,
+      "18": 0.002,
+      "19": 0.0,
+      "24": 0.0,
+      "25": 0.0,
+      "30": 0.0,
+      "31": 0.0
+    },
+    "Derrick Henry": {
+      "7": 0.7216,
+      "8": 0.6676,
+      "13": 0.162,
+      "18": 0.0112,
+      "19": 0.004,
+      "24": 0.0,
+      "25": 0.0,
+      "30": 0.0,
+      "31": 0.0
+    },
+    "Chris Olave": {
+      "7": 0.9172,
+      "8": 0.6692,
+      "13": 0.0216,
+      "18": 0.0012,
+      "19": 0.0004,
+      "24": 0.0,
+      "25": 0.0,
+      "30": 0.0,
+      "31": 0.0
+    },
+    "Saquon Barkley": {
+      "7": 0.8304,
+      "8": 0.7868,
+      "13": 0.2288,
+      "18": 0.0188,
+      "19": 0.0044,
+      "24": 0.0,
+      "25": 0.0,
+      "30": 0.0,
+      "31": 0.0
+    },
+    "Trey McBride": {
+      "7": 0.9952,
+      "8": 0.9568,
+      "13": 0.2656,
+      "18": 0.008,
+      "19": 0.0016,
+      "24": 0.0,
+      "25": 0.0,
+      "30": 0.0,
+      "31": 0.0
+    },
+    "Omarion Hampton": {
+      "7": 0.9508,
+      "8": 0.9348,
+      "13": 0.5204,
+      "18": 0.0792,
+      "19": 0.034,
+      "24": 0.0008,
+      "25": 0.0008,
+      "30": 0.0008,
+      "31": 0.0008
+    },
+    "Justin Jefferson": {
+      "7": 0.7668,
+      "8": 0.3836,
+      "13": 0.0072,
+      "18": 0.0,
+      "19": 0.0,
+      "24": 0.0,
+      "25": 0.0,
+      "30": 0.0,
+      "31": 0.0
+    },
+    "Colston Loveland": {
+      "7": 1.0,
+      "8": 0.9868,
+      "13": 0.4284,
+      "18": 0.018,
+      "19": 0.006,
+      "24": 0.0,
+      "25": 0.0,
+      "30": 0.0,
+      "31": 0.0
+    },
+    "Tee Higgins": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 0.96,
+      "18": 0.4656,
+      "19": 0.2996,
+      "24": 0.0428,
+      "25": 0.0428,
+      "30": 0.042,
+      "31": 0.042
+    },
+    "Zay Flowers": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 0.9992,
+      "18": 0.91,
+      "19": 0.84,
+      "24": 0.1716,
+      "25": 0.1536,
+      "30": 0.142,
+      "31": 0.142
+    },
+    "Nico Collins": {
+      "7": 1.0,
+      "8": 0.9976,
+      "13": 0.7288,
+      "18": 0.0748,
+      "19": 0.0356,
+      "24": 0.0008,
+      "25": 0.0008,
+      "30": 0.0008,
+      "31": 0.0008
+    },
+    "Joe Burrow": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 0.9924,
+      "18": 0.6584,
+      "19": 0.5364,
+      "24": 0.0776,
+      "25": 0.074,
+      "30": 0.0716,
+      "31": 0.0708
+    },
+    "Ashton Jeanty": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 0.9996,
+      "19": 0.9968,
+      "24": 0.9592,
+      "25": 0.9216,
+      "30": 0.6336,
+      "31": 0.6036
+    },
+    "Chase Brown": {
+      "7": 0.9836,
+      "8": 0.9744,
+      "13": 0.716,
+      "18": 0.1788,
+      "19": 0.078,
+      "24": 0.0,
+      "25": 0.0,
+      "30": 0.0,
+      "31": 0.0
+    },
+    "Jalen Hurts": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 0.9988,
+      "19": 0.9972,
+      "24": 0.502,
+      "25": 0.3756,
+      "30": 0.1748,
+      "31": 0.1688
+    },
+    "James Cook": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 1.0,
+      "19": 0.9984,
+      "24": 0.9596,
+      "25": 0.9204,
+      "30": 0.3704,
+      "31": 0.2576
+    },
+    "Tyler Warren": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 0.9764,
+      "19": 0.9292,
+      "24": 0.2232,
+      "25": 0.1492,
+      "30": 0.042,
+      "31": 0.0412
+    },
+    "Sam LaPorta": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 0.9996,
+      "19": 0.9996,
+      "24": 0.8868,
+      "25": 0.8032,
+      "30": 0.3964,
+      "31": 0.3752
+    },
+    "Ladd McConkey": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 0.9268,
+      "19": 0.8516,
+      "24": 0.1124,
+      "25": 0.0796,
+      "30": 0.0652,
+      "31": 0.0652
+    },
+    "DeVonta Smith": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 0.9512,
+      "18": 0.3056,
+      "19": 0.1676,
+      "24": 0.014,
+      "25": 0.0128,
+      "30": 0.0124,
+      "31": 0.0124
+    },
+    "Justin Herbert": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 1.0,
+      "19": 1.0,
+      "24": 0.972,
+      "25": 0.9352,
+      "30": 0.566,
+      "31": 0.522
+    },
+    "Lamar Jackson": {
+      "7": 1.0,
+      "8": 0.9992,
+      "13": 0.9592,
+      "18": 0.372,
+      "19": 0.2316,
+      "24": 0.0348,
+      "25": 0.034,
+      "30": 0.0316,
+      "31": 0.0304
+    },
+    "Tetairoa McMillan": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 1.0,
+      "19": 1.0,
+      "24": 0.9648,
+      "25": 0.9212,
+      "30": 0.7016,
+      "31": 0.674
+    },
+    "Breece Hall": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 1.0,
+      "19": 1.0,
+      "24": 1.0,
+      "25": 1.0,
+      "30": 0.986,
+      "31": 0.9636
+    },
+    "D'Andre Swift": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 1.0,
+      "19": 1.0,
+      "24": 1.0,
+      "25": 0.9992,
+      "30": 0.9744,
+      "31": 0.9444
+    },
+    "Garrett Wilson": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 1.0,
+      "19": 1.0,
+      "24": 0.9452,
+      "25": 0.8848,
+      "30": 0.6168,
+      "31": 0.5916
+    },
+    "Josh Allen": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 0.9948,
+      "19": 0.9884,
+      "24": 0.4144,
+      "25": 0.234,
+      "30": 0.0444,
+      "31": 0.04
+    },
+    "Parker Washington": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 1.0,
+      "19": 1.0,
+      "24": 0.9892,
+      "25": 0.9752,
+      "30": 0.8408,
+      "31": 0.8196
+    },
+    "Jared Goff": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 1.0,
+      "19": 1.0,
+      "24": 0.9804,
+      "25": 0.9736,
+      "30": 0.7912,
+      "31": 0.758
+    },
+    "Caleb Williams": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 1.0,
+      "19": 1.0,
+      "24": 0.9756,
+      "25": 0.9392,
+      "30": 0.75,
+      "31": 0.7064
+    },
+    "Bucky Irving": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 1.0,
+      "19": 1.0,
+      "24": 1.0,
+      "25": 1.0,
+      "30": 0.9876,
+      "31": 0.97
+    },
+    "Emeka Egbuka": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 1.0,
+      "19": 1.0,
+      "24": 0.9972,
+      "25": 0.992,
+      "30": 0.938,
+      "31": 0.9296
+    },
+    "Trevor Lawrence": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 1.0,
+      "19": 1.0,
+      "24": 1.0,
+      "25": 0.9996,
+      "30": 0.9616,
+      "31": 0.9448
+    },
+    "Christian Watson": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 1.0,
+      "19": 1.0,
+      "24": 0.9972,
+      "25": 0.9964,
+      "30": 0.9552,
+      "31": 0.9464
+    },
+    "Michael Mayer": {
+      "7": 1.0,
+      "8": 1.0,
+      "13": 1.0,
+      "18": 1.0,
+      "19": 1.0,
+      "24": 1.0,
+      "25": 1.0,
+      "30": 0.9796,
+      "31": 0.968
+    }
+  },
+  "stack_ownership": [
+    {
+      "players": [
+        "Ja'Marr Chase",
+        "Joe Burrow"
+      ],
+      "count": 207,
+      "field_ownership": 0.0575,
+      "independence_product": 0.02597222222222222,
+      "affinity_vs_independence": 2.2139037433155084
+    },
+    {
+      "players": [
+        "Tee Higgins",
+        "Joe Burrow"
+      ],
+      "count": 173,
+      "field_ownership": 0.04805555555555555,
+      "independence_product": 0.02523634259259259,
+      "affinity_vs_independence": 1.9042202878344539
+    },
+    {
+      "players": [
+        "Joe Burrow",
+        "Mike Gesicki"
+      ],
+      "count": 22,
+      "field_ownership": 0.006111111111111111,
+      "independence_product": 0.0014717592592592592,
+      "affinity_vs_independence": 4.152249134948097
+    },
+    {
+      "players": [
+        "Jalen Hurts",
+        "DeVonta Smith"
+      ],
+      "count": 214,
+      "field_ownership": 0.059444444444444446,
+      "independence_product": 0.02362469135802469,
+      "affinity_vs_independence": 2.51619983277592
+    },
+    {
+      "players": [
+        "Jalen Hurts",
+        "Dallas Goedert"
+      ],
+      "count": 72,
+      "field_ownership": 0.02,
+      "independence_product": 0.008059259259259259,
+      "affinity_vs_independence": 2.481617647058824
+    },
+    {
+      "players": [
+        "Jalen Hurts",
+        "Dontayvion Wicks"
+      ],
+      "count": 14,
+      "field_ownership": 0.0038888888888888888,
+      "independence_product": 0.0008296296296296297,
+      "affinity_vs_independence": 4.687499999999999
+    },
+    {
+      "players": [
+        "Ladd McConkey",
+        "Justin Herbert"
+      ],
+      "count": 142,
+      "field_ownership": 0.03944444444444444,
+      "independence_product": 0.015598765432098765,
+      "affinity_vs_independence": 2.528690146418678
+    },
+    {
+      "players": [
+        "Justin Herbert",
+        "Quentin Johnston"
+      ],
+      "count": 20,
+      "field_ownership": 0.005555555555555556,
+      "independence_product": 0.0019219907407407404,
+      "affinity_vs_independence": 2.890521498253644
+    },
+    {
+      "players": [
+        "Justin Herbert",
+        "Charlie Kolar"
+      ],
+      "count": 8,
+      "field_ownership": 0.0022222222222222222,
+      "independence_product": 0.0006685185185185185,
+      "affinity_vs_independence": 3.32409972299169
+    },
+    {
+      "players": [
+        "Zay Flowers",
+        "Lamar Jackson"
+      ],
+      "count": 205,
+      "field_ownership": 0.05694444444444444,
+      "independence_product": 0.024329861111111115,
+      "affinity_vs_independence": 2.3405166262309116
+    },
+    {
+      "players": [
+        "Lamar Jackson",
+        "Mark Andrews"
+      ],
+      "count": 58,
+      "field_ownership": 0.01611111111111111,
+      "independence_product": 0.005145833333333334,
+      "affinity_vs_independence": 3.1309041835357623
+    },
+    {
+      "players": [
+        "Lamar Jackson",
+        "Rashod Bateman"
+      ],
+      "count": 10,
+      "field_ownership": 0.002777777777777778,
+      "independence_product": 0.0005416666666666668,
+      "affinity_vs_independence": 5.128205128205128
+    },
+    {
+      "players": [
+        "Josh Allen",
+        "D.J. Moore"
+      ],
+      "count": 79,
+      "field_ownership": 0.021944444444444444,
+      "independence_product": 0.006104166666666667,
+      "affinity_vs_independence": 3.594994311717861
+    },
+    {
+      "players": [
+        "Josh Allen",
+        "Dalton Kincaid"
+      ],
+      "count": 19,
+      "field_ownership": 0.005277777777777778,
+      "independence_product": 0.002984259259259259,
+      "affinity_vs_independence": 1.7685386286068883
+    },
+    {
+      "players": [
+        "Josh Allen",
+        "Khalil Shakir"
+      ],
+      "count": 16,
+      "field_ownership": 0.0044444444444444444,
+      "independence_product": 0.000949537037037037,
+      "affinity_vs_independence": 4.680643588493417
+    },
+    {
+      "players": [
+        "Amon-Ra St. Brown",
+        "Jared Goff"
+      ],
+      "count": 69,
+      "field_ownership": 0.019166666666666665,
+      "independence_product": 0.010092592592592592,
+      "affinity_vs_independence": 1.8990825688073394
+    },
+    {
+      "players": [
+        "Sam LaPorta",
+        "Jared Goff"
+      ],
+      "count": 46,
+      "field_ownership": 0.012777777777777779,
+      "independence_product": 0.006661111111111112,
+      "affinity_vs_independence": 1.9182652210175146
+    },
+    {
+      "players": [
+        "Jared Goff",
+        "Jameson Williams"
+      ],
+      "count": 45,
+      "field_ownership": 0.0125,
+      "independence_product": 0.0070816358024691365,
+      "affinity_vs_independence": 1.765128897992983
+    },
+    {
+      "players": [
+        "Colston Loveland",
+        "Caleb Williams"
+      ],
+      "count": 114,
+      "field_ownership": 0.03166666666666667,
+      "independence_product": 0.013009259259259259,
+      "affinity_vs_independence": 2.434163701067616
+    },
+    {
+      "players": [
+        "Caleb Williams",
+        "Luther Burden"
+      ],
+      "count": 20,
+      "field_ownership": 0.005555555555555556,
+      "independence_product": 0.0026018518518518517,
+      "affinity_vs_independence": 2.135231316725979
+    },
+    {
+      "players": [
+        "Caleb Williams",
+        "Rome Odunze"
+      ],
+      "count": 10,
+      "field_ownership": 0.002777777777777778,
+      "independence_product": 0.0005637345679012346,
+      "affinity_vs_independence": 4.927456884752258
+    },
+    {
+      "players": [
+        "Parker Washington",
+        "Trevor Lawrence"
+      ],
+      "count": 3,
+      "field_ownership": 0.0008333333333333334,
+      "independence_product": 0.0013425925925925925,
+      "affinity_vs_independence": 0.6206896551724139
+    },
+    {
+      "players": [
+        "Trevor Lawrence",
+        "Brenton Strange"
+      ],
+      "count": 1,
+      "field_ownership": 0.0002777777777777778,
+      "independence_product": 0.00016782407407407406,
+      "affinity_vs_independence": 1.6551724137931036
+    },
+    {
+      "players": [
+        "Trevor Lawrence",
+        "Jakobi Meyers"
+      ],
+      "count": 2,
+      "field_ownership": 0.0005555555555555556,
+      "independence_product": 4.050925925925926e-05,
+      "affinity_vs_independence": 13.714285714285715
+    }
+  ],
+  "first_pick_board": [
+    {
+      "players": [
+        "Amon-Ra St. Brown"
+      ],
+      "positions": [
+        "WR"
+      ],
+      "value": 22.316806979847506,
+      "expected_payout": 1.5791562500000003,
+      "win_rate_vs_sample": 0.0015,
+      "p_top_1pct": 0.02476666666666667,
+      "mean_completed_score": 85.34143106921698,
+      "adp_delta": [
+        3.0
+      ],
+      "room_drafted_rate": [
+        1.0
+      ],
+      "stack_notes": [
+        ""
+      ],
+      "example_completion": [
+        "Amon-Ra St. Brown",
+        "Jared Goff",
+        "Jonathan Taylor",
+        "Jameson Williams",
+        "Sam LaPorta",
+        "Breece Hall"
+      ],
+      "survival_to_next_pick": 0.0
+    },
+    {
+      "players": [
+        "Jahmyr Gibbs"
+      ],
+      "positions": [
+        "RB"
+      ],
+      "value": 28.47102127234792,
+      "expected_payout": 1.4850989583333332,
+      "win_rate_vs_sample": 0.0013611111111111111,
+      "p_top_1pct": 0.021416666666666664,
+      "mean_completed_score": 87.24878984646028,
+      "adp_delta": [
+        0.10000000000000009
+      ],
+      "room_drafted_rate": [
+        1.0
+      ],
+      "stack_notes": [
+        ""
+      ],
+      "example_completion": [
+        "Jahmyr Gibbs",
+        "Jared Goff",
+        "Jonathan Taylor",
+        "Jameson Williams",
+        "Sam LaPorta",
+        "Garrett Wilson"
+      ],
+      "survival_to_next_pick": 0.0
+    },
+    {
+      "players": [
+        "Ja'Marr Chase"
+      ],
+      "positions": [
+        "WR"
+      ],
+      "value": 23.825365681670895,
+      "expected_payout": 1.1237625,
+      "win_rate_vs_sample": 0.0003333333333333334,
+      "p_top_1pct": 0.01824444444444444,
+      "mean_completed_score": 85.73015446314679,
+      "adp_delta": [
+        1.4
+      ],
+      "room_drafted_rate": [
+        1.0
+      ],
+      "stack_notes": [
+        ""
+      ],
+      "example_completion": [
+        "Ja'Marr Chase",
+        "Joe Burrow",
+        "Tee Higgins",
+        "Bucky Irving",
+        "Ashton Jeanty",
+        "Michael Mayer"
+      ],
+      "survival_to_next_pick": 0.0
+    },
+    {
+      "players": [
+        "Trey McBride"
+      ],
+      "positions": [
+        "TE"
+      ],
+      "value": 17.204671147536125,
+      "expected_payout": 1.1114916666666665,
+      "win_rate_vs_sample": 0.001811111111111111,
+      "p_top_1pct": 0.011716666666666669,
+      "mean_completed_score": 75.03222980982018,
+      "adp_delta": [
+        12.0
+      ],
+      "room_drafted_rate": [
+        1.0
+      ],
+      "stack_notes": [
+        ""
+      ],
+      "example_completion": [
+        "Trey McBride",
+        "Jacoby Brissett",
+        "Omarion Hampton",
+        "Marvin Harrison",
+        "Ashton Jeanty",
+        "Michael Wilson"
+      ],
+      "survival_to_next_pick": 0.5466666666666666
+    },
+    {
+      "players": [
+        "Jared Goff"
+      ],
+      "positions": [
+        "QB"
+      ],
+      "value": 24.53222439640181,
+      "expected_payout": 0.9709076388888889,
+      "win_rate_vs_sample": 0.0007555555555555555,
+      "p_top_1pct": 0.013694444444444447,
+      "mean_completed_score": 82.53509721522829,
+      "adp_delta": [
+        32.5
+      ],
+      "room_drafted_rate": [
+        0.406
+      ],
+      "stack_notes": [
+        ""
+      ],
+      "example_completion": [
+        "Jared Goff",
+        "Chris Olave",
+        "Jameson Williams",
+        "Sam LaPorta",
+        "Ashton Jeanty",
+        "D'Andre Swift"
+      ],
+      "survival_to_next_pick": 1.0
+    },
+    {
+      "players": [
+        "Trevor Lawrence"
+      ],
+      "positions": [
+        "QB"
+      ],
+      "value": 24.335149461607365,
+      "expected_payout": 0.9295607638888889,
+      "win_rate_vs_sample": 0.0005333333333333334,
+      "p_top_1pct": 0.014816666666666667,
+      "mean_completed_score": 77.75715117856696,
+      "adp_delta": [
+        34.2
+      ],
+      "room_drafted_rate": [
+        0.205
+      ],
+      "stack_notes": [
+        ""
+      ],
+      "example_completion": [
+        "Trevor Lawrence",
+        "Parker Washington",
+        "Jonathan Taylor",
+        "Jakobi Meyers",
+        "Ashton Jeanty",
+        "Brenton Strange"
+      ],
+      "survival_to_next_pick": 1.0
+    },
+    {
+      "players": [
+        "Bijan Robinson"
+      ],
+      "positions": [
+        "RB"
+      ],
+      "value": 23.864971154433874,
+      "expected_payout": 0.8714312500000001,
+      "win_rate_vs_sample": 0.00025555555555555553,
+      "p_top_1pct": 0.014033333333333335,
+      "mean_completed_score": 84.78445463609481,
+      "adp_delta": [
+        2.1
+      ],
+      "room_drafted_rate": [
+        1.0
+      ],
+      "stack_notes": [
+        ""
+      ],
+      "example_completion": [
+        "Bijan Robinson",
+        "Jared Goff",
+        "Jameson Williams",
+        "James Cook",
+        "Sam LaPorta",
+        "Garrett Wilson"
+      ],
+      "survival_to_next_pick": 0.0
+    },
+    {
+      "players": [
+        "Joe Burrow"
+      ],
+      "positions": [
+        "QB"
+      ],
+      "value": 26.265381496996163,
+      "expected_payout": 0.7659368055555557,
+      "win_rate_vs_sample": 0.0002555555555555556,
+      "p_top_1pct": 0.01133888888888889,
+      "mean_completed_score": 83.92271044267065,
+      "adp_delta": [
+        20.2
+      ],
+      "room_drafted_rate": [
+        0.9229999999999999
+      ],
+      "stack_notes": [
+        ""
+      ],
+      "example_completion": [
+        "Joe Burrow",
+        "Tee Higgins",
+        "Saquon Barkley",
+        "Ashton Jeanty",
+        "Emeka Egbuka",
+        "Michael Mayer"
+      ],
+      "survival_to_next_pick": 1.0
+    },
+    {
+      "players": [
+        "Lamar Jackson"
+      ],
+      "positions": [
+        "QB"
+      ],
+      "value": 24.666696551755415,
+      "expected_payout": 0.7171267361111112,
+      "win_rate_vs_sample": 0.00025,
+      "p_top_1pct": 0.010694444444444444,
+      "mean_completed_score": 81.22087643414471,
+      "adp_delta": [
+        17.5
+      ],
+      "room_drafted_rate": [
+        0.976
+      ],
+      "stack_notes": [
+        ""
+      ],
+      "example_completion": [
+        "Lamar Jackson",
+        "Zay Flowers",
+        "Derrick Henry",
+        "James Cook",
+        "Garrett Wilson",
+        "Sam LaPorta"
+      ],
+      "survival_to_next_pick": 0.9933333333333333
+    },
+    {
+      "players": [
+        "Colston Loveland"
+      ],
+      "positions": [
+        "TE"
+      ],
+      "value": 16.20189309829514,
+      "expected_payout": 0.7094097222222222,
+      "win_rate_vs_sample": 0.000488888888888889,
+      "p_top_1pct": 0.013394444444444441,
+      "mean_completed_score": 75.99234248159978,
+      "adp_delta": [
+        13.1
+      ],
+      "room_drafted_rate": [
+        1.0
+      ],
+      "stack_notes": [
+        ""
+      ],
+      "example_completion": [
+        "Colston Loveland",
+        "Caleb Williams",
+        "Bijan Robinson",
+        "Luther Burden",
+        "Ashton Jeanty",
+        "Tetairoa McMillan"
+      ],
+      "survival_to_next_pick": 0.6666666666666666
+    }
+  ],
+  "guided_drafts": [
+    {
+      "seat": 0,
+      "picks": [
+        1,
+        12,
+        13,
+        24,
+        25,
+        36
+      ],
+      "roster": [
+        "Amon-Ra St. Brown",
+        "Omarion Hampton",
+        "Ashton Jeanty",
+        "Sam LaPorta",
+        "Caleb Williams",
+        "Luther Burden"
+      ],
+      "decisions": [
+        {
+          "pick": 1,
+          "mode": "single",
+          "selection": [
+            "Amon-Ra St. Brown"
+          ],
+          "expected_payout": 1.5791562500000003,
+          "runner_up": [
+            "Jahmyr Gibbs"
+          ]
+        },
+        {
+          "pick": 12,
+          "mode": "pair",
+          "selection": [
+            "Omarion Hampton",
+            "Ashton Jeanty"
+          ],
+          "expected_payout": 1.3708812500000003,
+          "runner_up": [
+            "Jalen Hurts",
+            "Nico Collins"
+          ]
+        },
+        {
+          "pick": 24,
+          "mode": "pair",
+          "selection": [
+            "Sam LaPorta",
+            "Caleb Williams"
+          ],
+          "expected_payout": 1.4349687499999997,
+          "runner_up": [
+            "Justin Herbert",
+            "Sam LaPorta"
+          ]
+        },
+        {
+          "pick": 36,
+          "mode": "single",
+          "selection": [
+            "Luther Burden"
+          ],
+          "expected_payout": 1.482208333333333,
+          "runner_up": [
+            "Garrett Wilson"
+          ]
+        }
+      ]
+    },
+    {
+      "seat": 1,
+      "picks": [
+        2,
+        11,
+        14,
+        23,
+        26,
+        35
+      ],
+      "roster": [
+        "Amon-Ra St. Brown",
+        "Chris Olave",
+        "Ashton Jeanty",
+        "Sam LaPorta",
+        "Breece Hall",
+        "Jared Goff"
+      ],
+      "decisions": [
+        {
+          "pick": 2,
+          "mode": "single",
+          "selection": [
+            "Amon-Ra St. Brown"
+          ],
+          "expected_payout": 1.570226736111111,
+          "runner_up": [
+            "Trey McBride"
+          ]
+        },
+        {
+          "pick": 11,
+          "mode": "single",
+          "selection": [
+            "Chris Olave"
+          ],
+          "expected_payout": 1.7892972222222219,
+          "runner_up": [
+            "Jared Goff"
+          ]
+        },
+        {
+          "pick": 14,
+          "mode": "single",
+          "selection": [
+            "Ashton Jeanty"
+          ],
+          "expected_payout": 2.1056000000000004,
+          "runner_up": [
+            "Omarion Hampton"
+          ]
+        },
+        {
+          "pick": 23,
+          "mode": "single",
+          "selection": [
+            "Sam LaPorta"
+          ],
+          "expected_payout": 2.4726854166666663,
+          "runner_up": [
+            "Breece Hall"
+          ]
+        },
+        {
+          "pick": 26,
+          "mode": "single",
+          "selection": [
+            "Breece Hall"
+          ],
+          "expected_payout": 2.9091666666666662,
+          "runner_up": [
+            "Jared Goff"
+          ]
+        },
+        {
+          "pick": 35,
+          "mode": "single",
+          "selection": [
+            "Jared Goff"
+          ],
+          "expected_payout": 2.9091666666666662,
+          "runner_up": [
+            "Tyler Shough"
+          ]
+        }
+      ]
+    },
+    {
+      "seat": 2,
+      "picks": [
+        3,
+        10,
+        15,
+        22,
+        27,
+        34
+      ],
+      "roster": [
+        "Jahmyr Gibbs",
+        "Joe Burrow",
+        "Zay Flowers",
+        "Tee Higgins",
+        "Ashton Jeanty",
+        "Michael Mayer"
+      ],
+      "decisions": [
+        {
+          "pick": 3,
+          "mode": "single",
+          "selection": [
+            "Jahmyr Gibbs"
+          ],
+          "expected_payout": 1.5021916666666664,
+          "runner_up": [
+            "Chris Olave"
+          ]
+        },
+        {
+          "pick": 10,
+          "mode": "single",
+          "selection": [
+            "Joe Burrow"
+          ],
+          "expected_payout": 1.6084760416666664,
+          "runner_up": [
+            "De'Von Achane"
+          ]
+        },
+        {
+          "pick": 15,
+          "mode": "single",
+          "selection": [
+            "Zay Flowers"
+          ],
+          "expected_payout": 1.6398291666666664,
+          "runner_up": [
+            "Tee Higgins"
+          ]
+        },
+        {
+          "pick": 22,
+          "mode": "single",
+          "selection": [
+            "Tee Higgins"
+          ],
+          "expected_payout": 1.7603079861111113,
+          "runner_up": [
+            "Ashton Jeanty"
+          ]
+        },
+        {
+          "pick": 27,
+          "mode": "single",
+          "selection": [
+            "Ashton Jeanty"
+          ],
+          "expected_payout": 1.7822378472222222,
+          "runner_up": [
+            "James Cook"
+          ]
+        },
+        {
+          "pick": 34,
+          "mode": "single",
+          "selection": [
+            "Michael Mayer"
+          ],
+          "expected_payout": 2.1453750000000005,
+          "runner_up": [
+            "Juwan Johnson"
+          ]
+        }
+      ]
+    },
+    {
+      "seat": 3,
+      "picks": [
+        4,
+        9,
+        16,
+        21,
+        28,
+        33
+      ],
+      "roster": [
+        "Amon-Ra St. Brown",
+        "Jonathan Taylor",
+        "Sam LaPorta",
+        "Ashton Jeanty",
+        "Trevor Lawrence",
+        "Parker Washington"
+      ],
+      "decisions": [
+        {
+          "pick": 4,
+          "mode": "single",
+          "selection": [
+            "Amon-Ra St. Brown"
+          ],
+          "expected_payout": 1.5289149305555554,
+          "runner_up": [
+            "Chris Olave"
+          ]
+        },
+        {
+          "pick": 9,
+          "mode": "single",
+          "selection": [
+            "Jonathan Taylor"
+          ],
+          "expected_payout": 2.244282638888889,
+          "runner_up": [
+            "Chris Olave"
+          ]
+        },
+        {
+          "pick": 16,
+          "mode": "single",
+          "selection": [
+            "Sam LaPorta"
+          ],
+          "expected_payout": 2.272342013888889,
+          "runner_up": [
+            "Jared Goff"
+          ]
+        },
+        {
+          "pick": 21,
+          "mode": "single",
+          "selection": [
+            "Ashton Jeanty"
+          ],
+          "expected_payout": 2.3159892361111107,
+          "runner_up": [
+            "Jared Goff"
+          ]
+        },
+        {
+          "pick": 28,
+          "mode": "single",
+          "selection": [
+            "Trevor Lawrence"
+          ],
+          "expected_payout": 2.4083333333333323,
+          "runner_up": [
+            "Jared Goff"
+          ]
+        },
+        {
+          "pick": 33,
+          "mode": "single",
+          "selection": [
+            "Parker Washington"
+          ],
+          "expected_payout": 2.4083333333333323,
+          "runner_up": [
+            "Tetairoa McMillan"
+          ]
+        }
+      ]
+    },
+    {
+      "seat": 4,
+      "picks": [
+        5,
+        8,
+        17,
+        20,
+        29,
+        32
+      ],
+      "roster": [
+        "Amon-Ra St. Brown",
+        "Jonathan Taylor",
+        "Sam LaPorta",
+        "Jared Goff",
+        "Breece Hall",
+        "Garrett Wilson"
+      ],
+      "decisions": [
+        {
+          "pick": 5,
+          "mode": "single",
+          "selection": [
+            "Amon-Ra St. Brown"
+          ],
+          "expected_payout": 1.4924131944444445,
+          "runner_up": [
+            "Chris Olave"
+          ]
+        },
+        {
+          "pick": 8,
+          "mode": "single",
+          "selection": [
+            "Jonathan Taylor"
+          ],
+          "expected_payout": 2.090836111111111,
+          "runner_up": [
+            "Chris Olave"
+          ]
+        },
+        {
+          "pick": 17,
+          "mode": "single",
+          "selection": [
+            "Sam LaPorta"
+          ],
+          "expected_payout": 2.2596777777777777,
+          "runner_up": [
+            "Trevor Lawrence"
+          ]
+        },
+        {
+          "pick": 20,
+          "mode": "single",
+          "selection": [
+            "Jared Goff"
+          ],
+          "expected_payout": 2.2432854166666667,
+          "runner_up": [
+            "Ashton Jeanty"
+          ]
+        },
+        {
+          "pick": 29,
+          "mode": "single",
+          "selection": [
+            "Breece Hall"
+          ],
+          "expected_payout": 2.5148000000000006,
+          "runner_up": [
+            "Ashton Jeanty"
+          ]
+        },
+        {
+          "pick": 32,
+          "mode": "single",
+          "selection": [
+            "Garrett Wilson"
+          ],
+          "expected_payout": 2.550041666666666,
+          "runner_up": [
+            "Christian Watson"
+          ]
+        }
+      ]
+    },
+    {
+      "seat": 5,
+      "picks": [
+        6,
+        7,
+        18,
+        19,
+        30,
+        31
+      ],
+      "roster": [
+        "Derrick Henry",
+        "Chris Olave",
+        "Ashton Jeanty",
+        "Sam LaPorta",
+        "Jared Goff",
+        "Jameson Williams"
+      ],
+      "decisions": [
+        {
+          "pick": 6,
+          "mode": "pair",
+          "selection": [
+            "Derrick Henry",
+            "Chris Olave"
+          ],
+          "expected_payout": 1.4675569444444447,
+          "runner_up": [
+            "Chris Olave",
+            "Justin Jefferson"
+          ]
+        },
+        {
+          "pick": 18,
+          "mode": "pair",
+          "selection": [
+            "Ashton Jeanty",
+            "Sam LaPorta"
+          ],
+          "expected_payout": 1.6150569444444443,
+          "runner_up": [
+            "Ashton Jeanty",
+            "Zay Flowers"
+          ]
+        },
+        {
+          "pick": 30,
+          "mode": "pair",
+          "selection": [
+            "Jared Goff",
+            "Jameson Williams"
+          ],
+          "expected_payout": 1.7927500000000007,
+          "runner_up": [
+            "Tetairoa McMillan",
+            "Tyler Shough"
+          ]
+        }
+      ]
+    }
+  ]
+}
