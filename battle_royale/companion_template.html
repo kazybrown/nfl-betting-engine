@@ -97,6 +97,11 @@
                    background: color-mix(in srgb, var(--good) 12%, transparent); }
   .syn-badge.neg { color: var(--bad); border: 1px solid var(--bad);
                    background: color-mix(in srgb, var(--bad) 10%, transparent); }
+  .syn-badge.gone { color: var(--muted); border: 1px solid var(--line); }
+  .prow.dim { opacity: .55; }
+  .slid { font: 500 12px/1.6 "IBM Plex Mono", monospace; color: var(--accent);
+          border: 1px dashed var(--accent); border-radius: 8px; padding: 8px 10px;
+          margin: 0 0 10px; }
   .prow .av { font: 500 12px/1 "IBM Plex Mono", monospace; color: var(--muted); text-align: right; }
   .prow .gonebtn { background: none; border: 1px solid var(--line); color: var(--muted);
                    border-radius: 8px; width: 40px; height: 40px; font-size: 15px; cursor: pointer; }
@@ -138,6 +143,7 @@
     </div>
 
     <p class="must" id="must" hidden></p>
+    <p class="slid" id="slid" hidden></p>
     <div class="qhead"><h2 id="qtitle"></h2><span class="hint" id="qhint"></span></div>
     <div class="qlist" id="queue"></div>
 
@@ -150,11 +156,15 @@
       <p class="sub" style="margin-top:10px">Send these six names back to Claude to log and grade the entry.</p>
     </div>
 
-    <footer>Queue order follows ETR ranks, except when a player is gone/illegal for your
-      roster or a stack correlation with your players outweighs the rank gap (a full stack
-      lifts ~15 spots; overlaps drop a spot or two). Correlations and availability % come
-      from the battle_royale engine (fitted covariances; boards simulated against a
-      calibrated 70k field). Legality enforced: 1 QB, 1-2 RB, 2-3 WR, 1-2 TE.</footer>
+    <footer>Ranking = ETR rank backbone, adjusted by stack correlation with your roster
+      (a full stack lifts ~15 spots; overlaps drop a couple), soft construction logic
+      (QB urgency as picks run out, second-TE discount, WR2 fill), then weighted by the
+      probability each player is still on the board — inferred from ADP, room-drafted
+      rate and the current pick number, so opponents' picks are accounted for even if
+      you never mark them. "On board %" is that live estimate; dimmed rows are probably
+      gone (tap them only if your lobby proves otherwise — the gold strip calls out
+      slid values worth taking). Hard legality always enforced: 1 QB, 1-2 RB, 2-3 WR,
+      1-2 TE.</footer>
   </div>
 </div>
 <script>
@@ -170,7 +180,33 @@ const POS_MAX = {QB:1, RB:2, WR:3, TE:2};
 const SYNERGY_WEIGHT = 1.6;
 const RANK_GAP = 0.08;
 const MODEL_TIEBREAK = 0.1;
+const ADP_SIGMA = 3.4;          // calibrated ADP execution spread (real archives)
+const LIKELY_GONE = 0.35;       // below this availability a row dims
 const clampSyn = (v) => Math.max(-0.75, Math.min(0.75, v));
+const phi = (x) => 1 / (1 + Math.exp(-1.702 * x));  // fast normal CDF approx
+
+// Opponent picks inferred from ADP: P(still available at overall pick p)
+// under the calibrated latent-market model — a player is targeted with
+// probability own% and, if targeted, goes near his ADP. Marked-gone players
+// are excluded outright; this handles everyone the user did NOT mark.
+function pAvail(pl, pickNo) {
+  const p = 1 - pl.own * phi((pickNo - 0.5 - pl.adp) / ADP_SIGMA);
+  return Math.max(p, 0.02);
+}
+
+// Soft team-construction logic (hard legality is enforced separately):
+// QB urgency rises as picks run out, a second TE is a discount not a target,
+// and an unfilled WR2 gets a mild push before the endgame forces it.
+function needBonus(pos, roster) {
+  const c = posCounts(roster);
+  const left = 6 - roster.length;
+  let b = 0;
+  if (pos === "QB" && c.QB === 0) b += left <= 2 ? 0.30 : left <= 3 ? 0.12 : 0;
+  if (pos === "TE" && c.TE >= 1) b -= 0.35;
+  if (pos === "WR" && c.WR < 2) b += 0.08;
+  if (pos === "RB" && c.RB >= 2) b -= 0.05;
+  return b;
+}
 const P = PLAN.players;
 const SYN = {};
 for (const [a, b, d] of PLAN.synergy) {
@@ -266,23 +302,40 @@ function render() {
   }
 
   const taken = new Set([...S.roster, ...S.gone]);
-  // ETR-rank backbone over the WHOLE slate (not just precomputed rows), with
-  // engine metadata (availability, pair hints) attached where it exists.
+  // ETR-rank backbone over the WHOLE slate, adjusted by stack correlation and
+  // soft construction logic, then weighted by ADP-inferred availability so the
+  // most optimal REALISTIC next pick sits on top even if the user never marks
+  // opponents' picks.
   const qmeta = new Map(cur.sl.queue.map(q => [q.id, q]));
   const rows = P
     .filter(pl => !taken.has(pl.id) && ok.has(pl.pos))
     .map(pl => {
       const q = qmeta.get(pl.id);
+      const pav = pAvail(pl, pickNo);
+      const u = RANK_GAP * (160 - pl.rank)
+        + MODEL_TIEBREAK * (q ? q.score : 0)
+        + SYNERGY_WEIGHT * clampSyn(synergyWith(pl.id, roster))
+        + needBonus(pl.pos, roster);
       return {
         id: pl.id,
-        avail: q ? q.avail : null,
+        pav,
+        u,
         pairs_with: q ? q.pairs_with : [],
-        adj: -RANK_GAP * pl.rank
-          + MODEL_TIEBREAK * (q ? q.score : 0)
-          + SYNERGY_WEIGHT * clampSyn(synergyWith(pl.id, roster)),
+        adj: pav * u,
       };
     })
     .sort((a, b) => b.adj - a.adj);
+
+  // Slid-value alert: elite targets ADP says are probably gone — but if your
+  // lobby board still shows one, he IS the pick.
+  const slid = rows.filter(r => r.pav < 0.5)
+    .sort((a, b) => b.u - a.u).slice(0, 3)
+    .filter(r => r.u >= (rows[0] ? rows[0].u : 0));
+  $("slid").hidden = slid.length === 0;
+  if (slid.length) {
+    $("slid").innerHTML = "if still on your board, take: " + slid.map(r =>
+      `<b data-id="${r.id}" style="cursor:pointer">${P[r.id].name}</b>`).join(" · ");
+  }
 
   $("qtitle").textContent = `Your queue — pick ${pickNo}`;
   $("qhint").textContent = "take the highest name still on your board";
@@ -297,14 +350,17 @@ function render() {
         ? `<span class="syn-badge pos">▲ stack ${who} +${syn.toFixed(2)}</span>`
         : `<span class="syn-badge neg">▼ overlap ${who} ${syn.toFixed(2)}</span>`;
     }
+    const likelyGone = q.pav < LIKELY_GONE;
+    const goneBadge = likelyGone
+      ? `<span class="syn-badge gone">likely gone</span>` : "";
     const pw = (q.pairs_with || []).filter(j => !taken.has(j));
     const pwTxt = isPair && cur.sub === 0 && pw.length
       ? ` · pairs: ${pw.map(j => P[j].name.split(" ").slice(-1)[0]).join(", ")}` : "";
-    return `<div class="prow${k === 0 ? " top" : ""}${syn > 0.015 ? " stacked" : ""}" data-id="${q.id}">
+    return `<div class="prow${k === 0 ? " top" : ""}${syn > 0.015 ? " stacked" : ""}${likelyGone ? " dim" : ""}" data-id="${q.id}">
       <span class="rk">${k + 1}</span>
-      <span><span class="nm">${pl.name}</span><span class="pos-tag ${pl.pos}">${pl.pos}·${pl.team}</span>${synBadge}<br>
+      <span><span class="nm">${pl.name}</span><span class="pos-tag ${pl.pos}">${pl.pos}·${pl.team}</span>${synBadge}${goneBadge}<br>
         <span class="meta">ETR ${pl.rank} · ${Math.round(pl.own * 100)}% rooms · adp ${pl.adp.toFixed(1)}${pwTxt}</span></span>
-      <span class="av">${q.avail == null ? "–" : Math.round(q.avail * 100) + "%"}<br><span style="font-size:10px">avail</span></span>
+      <span class="av">${Math.round(q.pav * 100)}%<br><span style="font-size:10px">on board</span></span>
       <button class="gonebtn" data-gone="${q.id}" aria-label="mark ${pl.name} gone">✕</button>
     </div>`;
   }).join("") || '<p class="sub">Queue exhausted — use search below.</p>';
