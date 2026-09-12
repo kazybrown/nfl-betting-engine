@@ -60,10 +60,12 @@ not the transferred defaults, which produced an unrealistically diverse field.
 
 Run `scripts/br_validate.py`; results in `reports/battle_royale/`.
 
-- **Walk-forward, leakage-safe (40 folds through 2023–2025)**: central-interval
-  coverage 0.500 @ 50% and 0.776 @ 80%; CRPS beats the pooled-position baseline
-  (+0.8%); Gaussian-copula joint-tail error roughly half of independence
-  (0.0022 vs 0.0040).
+- **Walk-forward, leakage-safe (40 most-recent folds: 2023 wk15 – 2025 wk18)**:
+  central-interval coverage 0.484 @ 50% and 0.773 @ 80%; CRPS beats the
+  pooled-position baseline (+0.8%); Gaussian-copula joint-tail error ~24%
+  below independence (0.0039 vs 0.0051). Recent-window same-team QB–WR
+  joint-ceiling rates (3.2% observed vs 1.0% under independence) run above
+  even the copula's 2.3% — the pooled fit is conservative on modern stacking.
 - **Real Battle Royale archives (9 weeks, 2023–2024, ~460k entries)**: contest
   sizes 28–68k; winning scores 125–185 (median ≈ 150); real ADP execution noise
   MAD-σ ≈ 3.1–3.6; FLEX construction 55–78% RB; exact-roster unique share
