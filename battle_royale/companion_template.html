@@ -81,9 +81,23 @@
               letter-spacing: .03em; margin: 0; }
   .qhead .hint { color: var(--muted); font-size: 12px; }
   .qlist { display: flex; flex-direction: column; gap: 8px; }
-  .prow { display: grid; grid-template-columns: 30px 1fr auto auto; gap: 10px; align-items: center;
-          background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-          padding: 12px 12px; cursor: pointer; min-height: 52px; }
+  .prow { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto auto; gap: 8px;
+          align-items: center; background: var(--card); border: 1px solid var(--line);
+          border-radius: 10px; padding: 12px 10px 14px; cursor: pointer; min-height: 52px;
+          position: relative; overflow: hidden; }
+  .prow > span:nth-child(2) { min-width: 0; overflow-wrap: anywhere; }
+  .score { font: 700 20px/1 "Barlow Condensed", sans-serif; text-align: right;
+           font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .score small { display: block; font: 500 9.5px/1.5 "IBM Plex Mono", monospace;
+                 color: var(--muted); letter-spacing: .03em; }
+  .score.best { color: var(--accent); }
+  .score.best small { color: var(--accent); }
+  .score.dimscore { color: var(--muted); }
+  .scorebar { position: absolute; left: 0; bottom: 0; height: 3px;
+              background: var(--accent); opacity: .55; pointer-events: none; }
+  .prow.dim .scorebar { opacity: .2; }
+  .syn-badge.math { color: var(--muted); border: 1px solid var(--line);
+                    background: var(--card-hi); }
   .prow:active { background: var(--card-hi); }
   .prow.top { border-color: var(--accent); }
   .prow .rk { font: 700 17px/1 "Barlow Condensed", sans-serif; color: var(--muted); text-align: center; }
@@ -98,6 +112,8 @@
   .syn-badge.neg { color: var(--bad); border: 1px solid var(--bad);
                    background: color-mix(in srgb, var(--bad) 10%, transparent); }
   .syn-badge.gone { color: var(--muted); border: 1px solid var(--line); }
+  .syn-badge.out { color: var(--bad); border: 1px solid var(--bad); font-weight: 700; }
+  .syn-badge.quest { color: var(--accent); border: 1px solid var(--accent); }
   .prow.dim { opacity: .55; }
   .slid { font: 500 12px/1.6 "IBM Plex Mono", monospace; color: var(--accent);
           border: 1px dashed var(--accent); border-radius: 8px; padding: 8px 10px;
@@ -156,18 +172,17 @@
       <p class="sub" style="margin-top:10px">Send these six names back to Claude to log and grade the entry.</p>
     </div>
 
-    <footer>Objective: win the contest. Worth = ETR value backbone + the engine's
-      tournament-equity signal (rollouts scored for 1st-place payout vs a calibrated
-      70k field with duplicate prize sharing) + stack correlation with your roster +
-      construction terms + position-aware leverage (winners run chalk RB/TE cores and
-      take ownership leverage at QB — capped so uniqueness is only bought cheap).
-      Sequencing = positional urgency: the drop-off between taking a position now and
-      the best expected survivor at YOUR next pick, recomputed from your previous
-      picks. Overrides: dropped values get a slide bonus; high positive correlation
-      lifts ~15 rank spots. All of it weighted by live on-board probability (inferred
-      from ADP, room rate and current pick — opponents' picks counted without marking).
-      Dimmed rows are probably gone; the gold strip flags slid values. Hard legality:
-      1 QB, 1-2 RB, 2-3 WR, 1-2 TE.</footer>
+    <footer>Objective: win the contest. Each card's WIN SCORE = value backbone (ETR
+      rank + the engine's tournament-equity votes, scored for 1st place vs a
+      calibrated 70k field with duplicate prize sharing) plus the labeled chips:
+      stack/overlap correlation with your roster, now-or-wait (the drop-off vs the
+      best expected survivor at that position at YOUR next pick), leverage
+      (position-aware, QB-heavy, capped), roster need, slid value and injury. Chips
+      sum with the base to the score, so "−0.8 vs #1" is literally the equity cost of
+      taking that player instead of the top card. The gold bar under each row shows
+      relative standing. "board %" is the live ADP-inferred chance the player is
+      still available; dimmed rows are probably gone (gold strip flags slid values
+      worth taking anyway). Hard legality enforced: 1 QB, 1-2 RB, 2-3 WR, 1-2 TE.</footer>
   </div>
 </div>
 <script>
@@ -336,12 +351,21 @@ function render() {
     .filter(pl => !taken.has(pl.id) && ok.has(pl.pos))
     .map(pl => {
       const q = qmeta.get(pl.id);
-      const u = RANK_GAP * (160 - pl.rank)
-        + EQUITY_WEIGHT * (q ? q.score : 0)
-        + SYNERGY_WEIGHT * clampSyn(synergyWith(pl.id, roster))
-        + needBonus(pl.pos, roster)
-        + LEVERAGE[pl.pos] * (1 - pl.own);
-      return {id: pl.id, pos: pl.pos, u,
+      // Injury/status: Out and roster-inactive players drop to the gone
+      // bucket outright; Questionable/Doubtful carry a visible chip and a
+      // mild penalty (their projection may predate the designation).
+      const injGone = pl.inj === "O" || pl.inj === "IR";
+      // Score components are kept separate so each card can show WHY a
+      // player scores what he scores, not just the total.
+      const parts = {
+        value: RANK_GAP * (160 - pl.rank) + EQUITY_WEIGHT * (q ? q.score : 0),
+        stack: SYNERGY_WEIGHT * clampSyn(synergyWith(pl.id, roster)),
+        need: needBonus(pl.pos, roster),
+        leverage: LEVERAGE[pl.pos] * (1 - pl.own),
+        injury: pl.inj === "D" ? -0.35 : pl.inj === "Q" ? -0.15 : 0,
+      };
+      const u = parts.value + parts.stack + parts.need + parts.leverage + parts.injury;
+      return {id: pl.id, pos: pl.pos, u, injGone, parts,
               pav: pAvail(pl, pickNo),
               pavNext: nextOwn ? pAvail(pl, nextOwn) : 0,
               pairs_with: q ? q.pairs_with : []};
@@ -366,14 +390,16 @@ function render() {
       const urgency = nextOwn
         ? Math.min(Math.max(0, c.u - bestLater[c.pos]), 1.2) : 0;
       const drop = Math.min(DROP_BONUS * Math.max(0, pickNo - P[c.id].adp), DROP_CAP);
-      return {...c, gone: c.pav < LIKELY_GONE,
-              adj: c.u + URGENCY_WEIGHT * urgency + drop};
+      c.parts.scarcity = URGENCY_WEIGHT * urgency;
+      c.parts.slid = drop;
+      return {...c, gone: c.pav < LIKELY_GONE || c.injGone,
+              adj: c.u + c.parts.scarcity + c.parts.slid};
     })
     .sort((a, b) => (a.gone - b.gone) || (b.adj - a.adj));
 
   // Slid-value alert: elite targets ADP says are probably gone — but if your
   // lobby board still shows one, he IS the pick.
-  const slid = rows.filter(r => r.pav < 0.5)
+  const slid = rows.filter(r => r.pav < 0.5 && !r.injGone)
     .sort((a, b) => b.u - a.u).slice(0, 3)
     .filter(r => r.u >= (rows[0] ? rows[0].u : 0));
   $("slid").hidden = slid.length === 0;
@@ -383,30 +409,57 @@ function render() {
   }
 
   $("qtitle").textContent = `Your queue — pick ${pickNo}`;
-  $("qhint").textContent = "ranked for 1st-place equity — take the highest name on your board";
-  $("queue").innerHTML = rows.slice(0, 12).map((q, k) => {
+  $("qhint").textContent = "win score = 1st-place equity · gaps show the cost of passing";
+  const live = rows.filter(r => !r.gone);
+  const topAdj = live.length ? live[0].adj : (rows[0] ? rows[0].adj : 1);
+  const lastShown = rows.slice(0, 12);
+  const minAdj = Math.min(...lastShown.map(r => r.adj));
+  const span = Math.max(topAdj - minAdj, 0.5);
+  const CHIP_LABELS = {scarcity: "now-or-wait", leverage: "leverage", slid: "slid value",
+                       need: "roster need", injury: "injury"};
+
+  $("queue").innerHTML = lastShown.map((q, k) => {
     const pl = P[q.id];
-    const syn = synergyWith(q.id, roster);
+    const synW = q.parts.stack;  // weighted contribution, same units as the score
     let synBadge = "";
-    if (Math.abs(syn) >= 0.015) {
+    if (Math.abs(synW) >= 0.05) {
       const drv = synergyDriver(q.id, roster);
       const who = drv ? P[drv.who].name.split(" ").slice(-1)[0] : "";
-      synBadge = syn > 0
-        ? `<span class="syn-badge pos">▲ stack ${who} +${syn.toFixed(2)}</span>`
-        : `<span class="syn-badge neg">▼ overlap ${who} ${syn.toFixed(2)}</span>`;
+      synBadge = synW > 0
+        ? `<span class="syn-badge pos">▲ stack ${who} +${synW.toFixed(1)}</span>`
+        : `<span class="syn-badge neg">▼ overlap ${who} ${synW.toFixed(1)}</span>`;
     }
-    const likelyGone = q.pav < LIKELY_GONE;
-    const goneBadge = likelyGone
-      ? `<span class="syn-badge gone">likely gone</span>` : "";
+    // The two biggest remaining score reasons, as labeled chips.
+    const mathChips = Object.entries(q.parts)
+      .filter(([nm, v]) => nm !== "value" && nm !== "stack" && Math.abs(v) >= 0.08)
+      .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 2)
+      .map(([nm, v]) =>
+        `<span class="syn-badge math">${CHIP_LABELS[nm]} ${v > 0 ? "+" : ""}${v.toFixed(1)}</span>`)
+      .join("");
+    const likelyGone = q.gone;
+    const goneBadge = q.injGone
+      ? `<span class="syn-badge out">${pl.inj === "IR" ? "INACTIVE" : "OUT"}</span>`
+      : likelyGone ? `<span class="syn-badge gone">likely gone</span>` : "";
+    const injBadge = (pl.inj === "Q" || pl.inj === "D")
+      ? `<span class="syn-badge quest">${pl.inj === "Q" ? "QUES" : "DOUBT"}</span>` : "";
+    const ouTxt = pl.ou ? ` · O/U ${pl.ou} · ${pl.team} ${pl.itt}` : "";
     const pw = (q.pairs_with || []).filter(j => !taken.has(j));
     const pwTxt = isPair && cur.sub === 0 && pw.length
       ? ` · pairs: ${pw.map(j => P[j].name.split(" ").slice(-1)[0]).join(", ")}` : "";
-    return `<div class="prow${k === 0 ? " top" : ""}${syn > 0.015 ? " stacked" : ""}${likelyGone ? " dim" : ""}" data-id="${q.id}">
+    const gap = topAdj - q.adj;
+    const scoreCell = likelyGone
+      ? `<span class="score dimscore">${q.adj.toFixed(1)}<br><small>${Math.round(q.pav * 100)}% board</small></span>`
+      : k === 0 || gap < 0.05
+        ? `<span class="score best">${q.adj.toFixed(1)}<br><small>best pick</small></span>`
+        : `<span class="score">${q.adj.toFixed(1)}<br><small>−${gap.toFixed(1)} vs #1</small></span>`;
+    const barW = Math.max(4, Math.round(100 * (q.adj - minAdj) / span));
+    return `<div class="prow${k === 0 ? " top" : ""}${synW > 0.05 ? " stacked" : ""}${likelyGone ? " dim" : ""}" data-id="${q.id}">
       <span class="rk">${k + 1}</span>
-      <span><span class="nm">${pl.name}</span><span class="pos-tag ${pl.pos}">${pl.pos}·${pl.team}</span>${synBadge}${goneBadge}<br>
-        <span class="meta">ETR ${pl.rank} · ${Math.round(pl.own * 100)}% rooms · adp ${pl.adp.toFixed(1)}${pwTxt}</span></span>
-      <span class="av">${Math.round(q.pav * 100)}%<br><span style="font-size:10px">on board</span></span>
+      <span><span class="nm">${pl.name}</span><span class="pos-tag ${pl.pos}">${pl.pos}·${pl.team}</span>${synBadge}${mathChips}${injBadge}${goneBadge}<br>
+        <span class="meta">ETR ${pl.rank} · ${Math.round(pl.own * 100)}% rooms · adp ${pl.adp.toFixed(1)} · board ${Math.round(q.pav * 100)}%${ouTxt}${pwTxt}</span></span>
+      ${scoreCell}
       <button class="gonebtn" data-gone="${q.id}" aria-label="mark ${pl.name} gone">✕</button>
+      <span class="scorebar" style="width:${barW}%"></span>
     </div>`;
   }).join("") || '<p class="sub">Queue exhausted — use search below.</p>';
   save();
