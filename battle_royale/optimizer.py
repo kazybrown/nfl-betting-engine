@@ -95,7 +95,7 @@ class PickOptimizer:
         s = self.slate
         self._slate_hash = _cache.array_hash(
             s.proj, s.adp, s.room_drafted_rate, s.ceiling, s.pos.astype(np.int8)
-        ) + _cache.text_hash([p.name for p in s.players])
+        ) + _cache.text_hash([p.name for p in s.players], s.fmt.structure_key())
         p = self.engine.policy
         self._policy_hash = _cache.text_hash(p.adp_sigma, p.choice_noise, p.stack_scale)
 

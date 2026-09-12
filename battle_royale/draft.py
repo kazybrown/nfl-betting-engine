@@ -2,37 +2,38 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 
-from .constants import (
-    ROSTER_MAX,
-    ROSTER_MIN,
-    ROSTER_SIZE,
-    SEATS,
-    TOTAL_PICKS,
-    next_pick_of_seat,
-    seat_of_pick,
-)
 from .slate import Slate
 
 
 @dataclass(eq=False)
 class DraftState:
-    """Mutable room state. ``next_pick`` is the overall pick about to be made."""
+    """Mutable room state. ``next_pick`` is the overall pick about to be made.
+
+    All structural rules (seats, rounds, roster bounds, snake order) come
+    from ``slate.fmt``, so the same state machinery runs any contest format.
+    """
 
     slate: Slate
-    rosters: list[list[int]] = field(default_factory=lambda: [[] for _ in range(SEATS)])
+    rosters: list[list[int]] = None  # type: ignore[assignment]
     counts: np.ndarray = None  # type: ignore[assignment]
     avail: np.ndarray = None  # type: ignore[assignment]
     next_pick: int = 1
 
     def __post_init__(self) -> None:
+        if self.rosters is None:
+            self.rosters = [[] for _ in range(self.fmt.seats)]
         if self.counts is None:
-            self.counts = np.zeros((SEATS, 4), dtype=np.int8)
+            self.counts = np.zeros((self.fmt.seats, 4), dtype=np.int8)
         if self.avail is None:
             self.avail = np.ones(self.slate.n, dtype=bool)
+
+    @property
+    def fmt(self):
+        return self.slate.fmt
 
     # ------------------------------------------------------------------
     # Construction / copying
@@ -61,17 +62,17 @@ class DraftState:
 
     @property
     def complete(self) -> bool:
-        return self.next_pick > TOTAL_PICKS
+        return self.next_pick > self.fmt.total_picks
 
     def seat_on_clock(self) -> int:
-        return seat_of_pick(self.next_pick)
+        return self.fmt.seat_of_pick(self.next_pick)
 
     def picks_left(self, seat: int) -> int:
-        return ROSTER_SIZE - len(self.rosters[seat])
+        return self.fmt.roster_size - len(self.rosters[seat])
 
     def next_own_pick(self, seat: int) -> int | None:
         """The seat's next pick strictly after the one currently on the clock."""
-        return next_pick_of_seat(self.next_pick, seat)
+        return self.fmt.next_pick_of_seat(self.next_pick, seat)
 
     def position_eligibility(self, seat: int) -> np.ndarray:
         """Bool[4]: positions this seat may legally draft with its next pick."""
@@ -80,12 +81,13 @@ class DraftState:
         out = np.zeros(4, dtype=bool)
         if left_after < 0:
             return out
+        rmin, rmax = self.fmt.min_arr, self.fmt.max_arr
         for pos in range(4):
-            if counts[pos] >= ROSTER_MAX[pos]:
+            if counts[pos] >= rmax[pos]:
                 continue
             after = counts.copy()
             after[pos] += 1
-            needed = int(np.maximum(ROSTER_MIN - after, 0).sum())
+            needed = int(np.maximum(rmin - after, 0).sum())
             out[pos] = needed <= left_after
         return out
 

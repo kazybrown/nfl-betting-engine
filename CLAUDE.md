@@ -2,10 +2,25 @@
 
 ## Battle Royale draft bot (live-draft workflow)
 
-The `battle_royale/` package is a calibrated Underdog Battle Royale draft
-model (see `battle_royale/README.md`). When the user is drafting, act as the
+The `battle_royale/` package is a calibrated Underdog weekly-draft model
+(see `battle_royale/README.md`). When the user is drafting, act as the
 draft bot: they give their draft position and the picks as they happen; you
 run the model and answer with the ranked board, fast.
+
+### Contest formats
+
+The engine covers every Underdog 6-man weekly NFL draft tournament, not just
+Battle Royale. Structure (seats, rounds, roster bounds, payout table) comes
+from the registry `battle_royale/data/formats.json`; every CLI takes
+`--format KEY` (default `battle_royale`). Switching contests = the right
+`--format` plus that contest's ETR export CSV. When the user names a contest
+(Battle Royale, Hurry Up, The Turkey, a playoff edition), use its key; if a
+format is missing from the registry, add it ONLY with verified structure —
+never guess rounds or roster rules (ask the user for the lobby screenshot).
+Caches are format-keyed, so slates warmed under different formats never
+collide. Per-format prize tables live next to the registry as JSON named by
+`payouts_file` (see `battle_royale.equity.load_payout_table`); `--payouts
+PATH` overrides.
 
 Environment: use the repo venv `.venv-br/bin/python` (create with
 `uv venv .venv-br && uv pip install --python .venv-br/bin/python numpy scipy

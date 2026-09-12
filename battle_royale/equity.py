@@ -97,20 +97,24 @@ class PayoutCurve:
         return ranks, pays
 
 
-def load_payout_table(path: str | Path | None = None) -> tuple[PayoutCurve, dict]:
+def load_payout_table(
+    path: str | Path | None = None, filename: str | None = None
+) -> tuple[PayoutCurve, dict]:
     """Real contest payout curve plus its metadata, with a safe fallback.
 
-    Reads ``battle_royale/data/payouts.json`` (or an explicit ``path``): a
-    dict with ``entry_fee_usd`` and ``tiers`` (rank_from/rank_to/prize_usd
-    bands), plus provenance fields echoed back in the metadata. When no table
-    is available the generic placeholder curve is returned with
-    ``meta["source"] == "placeholder"`` so callers can say which one is live.
+    Reads ``battle_royale/data/payouts.json`` (or an explicit ``path``, or a
+    different packaged ``filename`` — contest formats name theirs via
+    ``ContestFormat.payouts_file``): a dict with ``entry_fee_usd`` and
+    ``tiers`` (rank_from/rank_to/prize_usd bands), plus provenance fields
+    echoed back in the metadata. When no table is available the generic
+    placeholder curve is returned with ``meta["source"] == "placeholder"``
+    so callers can say which one is live.
     """
     if path is not None:
         raw = Path(path).read_text()  # an explicit path must fail loudly
     else:
         try:
-            ref = resources.files("battle_royale") / "data" / "payouts.json"
+            ref = resources.files("battle_royale") / "data" / (filename or "payouts.json")
             raw = ref.read_text()
         except (FileNotFoundError, ModuleNotFoundError):
             return PayoutCurve(), {"source": "placeholder"}

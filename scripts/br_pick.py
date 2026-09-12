@@ -38,12 +38,13 @@ from battle_royale import (
 )
 from battle_royale.assistant import format_options, match_player
 from battle_royale.cache import DEFAULT_CACHE_DIR
+from battle_royale.formats import get_format
 
 
 def build_optimizer(
     csv: str, contest_size: int, full: bool, seed: int,
     season: int | None = None, week: int | None = None,
-    payouts: str | None = None,
+    payouts: str | None = None, fmt_key: str = "battle_royale",
 ) -> PickOptimizer:
     game_lines = {}
     if season and week:
@@ -53,11 +54,12 @@ def build_optimizer(
     from battle_royale.equity import load_payout_table
     from battle_royale.slate import Slate
 
-    engine = BattleRoyaleEngine(Slate.from_csv(csv), seed=seed, game_lines=game_lines)
+    fmt = get_format(fmt_key)
+    engine = BattleRoyaleEngine(Slate.from_csv(csv, fmt=fmt), seed=seed, game_lines=game_lines)
     config = OptimizerConfig() if full else OptimizerConfig.fast()
     config.seed = seed
     config.cache_dir = str(DEFAULT_CACHE_DIR)
-    curve, _ = load_payout_table(payouts)
+    curve, _ = load_payout_table(payouts, filename=fmt.payouts_file)
     return PickOptimizer(
         engine, TournamentModel(contest_size=contest_size, curve=curve), config
     )
@@ -72,6 +74,8 @@ def main() -> int:
     ap.add_argument("--full", action="store_true", help="deep preset (slower, steadier)")
     ap.add_argument("--warm", action="store_true", help="just build+cache slate artifacts")
     ap.add_argument("--top", type=int, default=8, help="options to display")
+    ap.add_argument("--format", default="battle_royale", dest="fmt",
+                    help="contest format key from battle_royale/data/formats.json")
     ap.add_argument("--contest-size", type=int, default=70_000)
     ap.add_argument("--payouts", default=None,
                     help="prize-table JSON path (default: packaged real table if present)")
@@ -84,17 +88,18 @@ def main() -> int:
     if args.warm:
         for full in (False, True) if args.full else (False,):
             opt = build_optimizer(args.csv, args.contest_size, full, args.seed,
-                                  args.season, args.week, args.payouts)
+                                  args.season, args.week, args.payouts, args.fmt)
             opt.warm()
             print(f"warmed {'full' if full else 'fast'} preset in {time.time() - t0:.1f}s")
         return 0
 
+    n_seats = get_format(args.fmt).seats
     seat = args.seat0 if args.seat0 is not None else (args.seat - 1 if args.seat else None)
-    if seat is None or not 0 <= seat <= 5:
-        ap.error("give --seat 1-6 (lobby position) or --seat0 0-5")
+    if seat is None or not 0 <= seat < n_seats:
+        ap.error(f"give --seat 1-{n_seats} (lobby position) or --seat0 0-{n_seats - 1}")
 
     opt = build_optimizer(args.csv, args.contest_size, args.full, args.seed,
-                          args.season, args.week, args.payouts)
+                          args.season, args.week, args.payouts, args.fmt)
     state = DraftState(opt.slate)
     recorded = []
     for name in [x for x in args.picks.split(",") if x.strip()]:

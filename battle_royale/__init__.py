@@ -29,18 +29,21 @@ from .draft import DraftState
 from .engine import BattleRoyaleEngine
 from .equity import PayoutCurve, TournamentModel, load_payout_table
 from .field import FieldAnalytics
+from .formats import BATTLE_ROYALE, ContestFormat, get_format, load_formats
 from .marginals import MarginalModel
 from .opponents import OpponentPolicy
 from .optimizer import OptimizerConfig, PickOptimizer
 from .slate import Slate
 
 __all__ = [
+    "BATTLE_ROYALE",
     "POSITIONS",
     "ROSTER_MAX",
     "ROSTER_MIN",
     "ROSTER_SIZE",
     "SEATS",
     "BattleRoyaleEngine",
+    "ContestFormat",
     "CorrelationModel",
     "DraftState",
     "FieldAnalytics",
@@ -51,5 +54,7 @@ __all__ = [
     "PickOptimizer",
     "Slate",
     "TournamentModel",
+    "get_format",
+    "load_formats",
     "load_payout_table",
 ]

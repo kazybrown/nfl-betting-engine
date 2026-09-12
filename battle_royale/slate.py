@@ -19,6 +19,7 @@ from pathlib import Path
 import numpy as np
 
 from .constants import POS_INDEX, POSITIONS
+from .formats import BATTLE_ROYALE, ContestFormat
 
 
 def _pct(x: str | float | None) -> float:
@@ -50,9 +51,15 @@ class Player:
 
 @dataclass
 class Slate:
-    """Array-backed slate; index order is the CSV row order."""
+    """Array-backed slate; index order is the CSV row order.
+
+    ``fmt`` is the contest format this slate is being drafted under — every
+    structural rule (seats, rounds, roster bounds, snake math) downstream
+    reads from it, so one slate CSV can serve any 6-man weekly format.
+    """
 
     players: list[Player]
+    fmt: ContestFormat = field(default_factory=lambda: BATTLE_ROYALE)
     name_to_idx: dict[str, int] = field(init=False)
     n: int = field(init=False)
 
@@ -83,7 +90,7 @@ class Slate:
                         "Proj", "Ceiling", "Own %")
 
     @classmethod
-    def from_csv(cls, path: str | Path) -> Slate:
+    def from_csv(cls, path: str | Path, fmt: ContestFormat | None = None) -> Slate:
         players: list[Player] = []
         with open(path, newline="", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
@@ -116,7 +123,7 @@ class Slate:
                 )
         if not players:
             raise ValueError(f"no usable player rows found in {path}")
-        return cls(players)
+        return cls(players, fmt=fmt or BATTLE_ROYALE)
 
     def idx(self, player: str | int) -> int:
         """Resolve a player name or index to an index."""

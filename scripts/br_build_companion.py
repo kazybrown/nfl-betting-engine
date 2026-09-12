@@ -20,7 +20,12 @@ def main() -> None:
     ap.add_argument("--out", default="reports/battle_royale/draft_companion.html")
     args = ap.parse_args()
     plan = json.loads(Path(args.plan).read_text())
-    html = TEMPLATE.read_text().replace("__PLAN_JSON__", json.dumps(plan, separators=(",", ":")))
+    fmt_name = plan.get("format", {}).get("name", "Battle Royale")
+    html = (
+        TEMPLATE.read_text()
+        .replace("__PLAN_JSON__", json.dumps(plan, separators=(",", ":")))
+        .replace("__FMT_NAME__", fmt_name)
+    )
     Path(args.out).write_text(html)
     print(f"wrote {args.out} ({len(html)} bytes)")
 

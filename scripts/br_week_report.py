@@ -26,9 +26,9 @@ from battle_royale import (
     PickOptimizer,
     TournamentModel,
 )
-from battle_royale.constants import SEATS, TOTAL_PICKS, picks_of_seat
 from battle_royale.equity import load_payout_table
 from battle_royale.field import positional_construction
+from battle_royale.formats import get_format
 
 
 def survival_table(engine, n_rooms: int, checkpoints: list[int], top_n: int, seed: int) -> dict:
@@ -41,7 +41,7 @@ def survival_table(engine, n_rooms: int, checkpoints: list[int], top_n: int, see
         st = DraftState(slate)
         seats = engine.policy.room_params(rng)
         times = engine.policy.latent_market(rng)
-        pick_of = np.full(slate.n, TOTAL_PICKS + 1, dtype=int)
+        pick_of = np.full(slate.n, slate.fmt.total_picks + 1, dtype=int)
         while not st.complete:
             pick = st.next_pick
             chosen = engine.policy.choose(st, seats, times, rng)
@@ -130,13 +130,16 @@ def guided_draft(optimizer, seat: int, seed: int) -> dict:
         else:
             engine.policy.choose(st, seats, times, rng)
     roster = engine.slate.names(st.rosters[seat])
-    return {"seat": seat, "picks": picks_of_seat(seat), "roster": roster, "decisions": decisions}
+    return {"seat": seat, "picks": engine.slate.fmt.picks_of_seat(seat),
+            "roster": roster, "decisions": decisions}
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--csv", required=True)
     ap.add_argument("--out", default="reports/battle_royale")
+    ap.add_argument("--format", default="battle_royale", dest="fmt",
+                    help="contest format key from battle_royale/data/formats.json")
     ap.add_argument("--contest-size", type=int, default=70_000)
     ap.add_argument("--payouts", default=None,
                     help="prize-table JSON path (default: packaged real table if present)")
@@ -149,15 +152,17 @@ def main() -> None:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
 
-    engine = BattleRoyaleEngine.from_csv(args.csv, seed=args.seed)
+    fmt = get_format(args.fmt)
+    engine = BattleRoyaleEngine.from_csv(args.csv, seed=args.seed, fmt=fmt)
     config = OptimizerConfig.fast() if args.fast else OptimizerConfig()
     config.seed = args.seed
-    curve, pay_meta = load_payout_table(args.payouts)
+    curve, pay_meta = load_payout_table(args.payouts, filename=fmt.payouts_file)
     optimizer = PickOptimizer(
         engine, TournamentModel(contest_size=args.contest_size, curve=curve), config
     )
 
     report: dict = {
+        "format": fmt.key,
         "slate_players": engine.slate.n,
         "contest_size": args.contest_size,
         "payouts": pay_meta.get("contest", pay_meta["source"]),
@@ -185,7 +190,7 @@ def main() -> None:
 
     if args.guided_drafts:
         report["guided_drafts"] = []
-        for seat in range(SEATS):
+        for seat in range(engine.slate.fmt.seats):
             print(f"guided draft, seat {seat}...")
             report["guided_drafts"].append(guided_draft(optimizer, seat, args.seed + 100 + seat))
 

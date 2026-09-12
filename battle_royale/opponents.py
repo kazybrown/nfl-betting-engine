@@ -17,7 +17,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .constants import RB, ROSTER_MIN, SEATS, TE, TOTAL_PICKS, WR
+from .constants import RB, TE, WR
 from .draft import DraftState
 from .slate import Slate
 
@@ -58,11 +58,12 @@ class OpponentPolicy:
         self.stack_scale = stack_scale
         # Infer the field's FLEX construction from room-drafted rates: excess
         # of expected per-roster position counts above mandatory minima.
+        fmt = slate.fmt
         per_roster = np.array(
             [slate.room_drafted_rate[slate.pos == k].sum() for k in range(4)]
-        ) / float(SEATS)
-        rb_extra = max(per_roster[RB] - 1.0, 0.0)
-        wr_extra = max(per_roster[WR] - 2.0, 0.0)
+        ) / float(fmt.seats)
+        rb_extra = max(per_roster[RB] - float(fmt.roster_min[RB]), 0.0)
+        wr_extra = max(per_roster[WR] - float(fmt.roster_min[WR]), 0.0)
         denom = max(rb_extra + wr_extra, 1e-9)
         self.flex_target = {"RB": rb_extra / denom, "WR": wr_extra / denom, "TE": 0.0}
         self.per_roster_target = per_roster
@@ -81,7 +82,7 @@ class OpponentPolicy:
         )
 
     def room_params(self, rng: np.random.Generator) -> list[SeatParams]:
-        return [self.seat_params(rng) for _ in range(SEATS)]
+        return [self.seat_params(rng) for _ in range(self.slate.fmt.seats)]
 
     def latent_market(self, rng: np.random.Generator) -> np.ndarray:
         """Per-room latent pick times: Normal(ADP, sigma) mixture with an
@@ -92,7 +93,7 @@ class OpponentPolicy:
         times[targeted] = rng.normal(s.adp[targeted], self.adp_sigma)
         n_untargeted = int((~targeted).sum())
         times[~targeted] = (
-            TOTAL_PICKS + rng.exponential(19.0, n_untargeted) + 0.12 * s.adp[~targeted]
+            s.fmt.total_picks + rng.exponential(19.0, n_untargeted) + 0.12 * s.adp[~targeted]
         )
         return np.maximum(times, 0.25)
 
@@ -103,16 +104,17 @@ class OpponentPolicy:
     def _need_bonus(
         self, counts: np.ndarray, pos: int, left_before: int, seat: SeatParams
     ) -> float:
-        missing = np.maximum(ROSTER_MIN - counts, 0)
+        rmin = self.slate.fmt.min_arr
+        missing = np.maximum(rmin - counts, 0)
         mandatory = int(missing.sum())
         slack = left_before - mandatory
         b = 0.0
         if missing[pos] > 0:
             urgency = 1.0 + 1.20 / (max(slack, 0) + 1.0)
             b += seat.need * (1.25 + 1.35 * urgency)
-        if pos == WR and counts[WR] < 2:
+        if pos == WR and counts[WR] < rmin[WR]:
             b += 0.45 * seat.need
-        if pos == RB and counts[RB] < 1:
+        if pos == RB and counts[RB] < rmin[RB]:
             b += 0.35 * seat.need
         if mandatory == 0:
             prb = min(max(seat.rb_flex, 0.01), 0.99)
@@ -161,7 +163,7 @@ class OpponentPolicy:
         if len(elig) == 0:
             raise RuntimeError(f"no legal candidate at pick {pick}")
 
-        missing = np.maximum(ROSTER_MIN - counts, 0)
+        missing = np.maximum(s.fmt.min_arr - counts, 0)
         pool_n = 22 if int(missing.sum()) >= left_before - 1 else 18
         order = np.argsort(times[elig] + 0.008 * s.rank[elig])
         pool = elig[order[: min(pool_n, len(order))]]

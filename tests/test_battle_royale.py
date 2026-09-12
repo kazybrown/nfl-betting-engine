@@ -191,6 +191,48 @@ def test_stack_correlation_realized(engine):
 # ----------------------------------------------------------------------
 
 
+def test_contest_format_structure():
+    from battle_royale.formats import ContestFormat, get_format
+
+    fast = ContestFormat(key="test4", name="Test 4-round", rounds=4,
+                         roster_min=(1, 1, 1, 0), roster_max=(1, 2, 2, 1))
+    assert fast.total_picks == 24 and fast.roster_size == 4
+    assert fast.picks_of_seat(0) == [1, 12, 13, 24]
+    assert fast.picks_of_seat(5) == [6, 7, 18, 19]
+    assert fast.seat_of_pick(6) == 5 and fast.seat_of_pick(7) == 5
+    # 6 rounds cannot fit inside max 1+2+2+0=5 roster slots.
+    with pytest.raises(ValueError):
+        ContestFormat(key="bad", name="bad", rounds=6,
+                      roster_min=(1, 1, 1, 0), roster_max=(1, 2, 2, 0))
+    assert get_format("battle_royale").total_picks == 36
+    with pytest.raises(KeyError):
+        get_format("not_a_format")
+
+
+def test_alt_format_room_and_field():
+    from battle_royale.field import generate_field
+    from battle_royale.formats import ContestFormat
+
+    fast = ContestFormat(key="test4", name="Test 4-round", rounds=4,
+                         roster_min=(1, 1, 1, 0), roster_max=(1, 2, 2, 1),
+                         default_contest_size=10_000)
+    s = synthetic_slate()
+    alt = Slate(s.players, fmt=fast)
+    policy = OpponentPolicy(alt)
+    rng = np.random.default_rng(11)
+    st = policy.simulate_room(rng)
+    assert st.complete and st.next_pick == 25
+    for seat in range(6):
+        pos = [alt.players[i].position for i in st.rosters[seat]]
+        assert len(pos) == 4
+        assert pos.count("QB") == 1
+        assert 1 <= pos.count("RB") <= 2
+        assert 1 <= pos.count("WR") <= 2
+        assert pos.count("TE") <= 1
+    field = generate_field(policy, 60, rng)
+    assert field.shape == (60, 4)
+
+
 def test_room_is_legal(engine):
     rng = np.random.default_rng(1)
     st = engine.policy.simulate_room(rng)

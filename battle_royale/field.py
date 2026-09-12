@@ -14,7 +14,6 @@ from itertools import combinations
 
 import numpy as np
 
-from .constants import SEATS
 from .opponents import OpponentPolicy
 from .slate import Slate
 
@@ -24,13 +23,15 @@ def generate_field(
     n_entries: int,
     rng: np.random.Generator,
 ) -> np.ndarray:
-    """Simulate fresh rooms until ``n_entries`` rosters exist; (entries, 6)."""
-    rooms = math.ceil(n_entries / SEATS)
-    out = np.empty((rooms * SEATS, SEATS), dtype=np.int16)
+    """Simulate fresh rooms until ``n_entries`` rosters exist;
+    shape (entries, roster_size)."""
+    fmt = policy.slate.fmt
+    rooms = math.ceil(n_entries / fmt.seats)
+    out = np.empty((rooms * fmt.seats, fmt.roster_size), dtype=np.int16)
     k = 0
     for _ in range(rooms):
         st = policy.simulate_room(rng)
-        for seat in range(SEATS):
+        for seat in range(fmt.seats):
             out[k] = st.rosters[seat]
             k += 1
     return out[:n_entries]
@@ -81,7 +82,9 @@ class FieldAnalytics:
             self.triple_counts.update(combinations(sig, 3))
         self.entry_ownership = self.marginal_counts / max(self.n_entries, 1)
         # One room per six entries; a player appears at most once per room.
-        self.room_drafted_rate = self.marginal_counts / max(self.n_entries / SEATS, 1)
+        self.room_drafted_rate = self.marginal_counts / max(
+            self.n_entries / self.slate.fmt.seats, 1
+        )
 
     # ------------------------------------------------------------------
 

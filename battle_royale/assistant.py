@@ -26,6 +26,7 @@ import sys
 from .draft import DraftState
 from .engine import BattleRoyaleEngine
 from .equity import TournamentModel, load_payout_table
+from .formats import get_format
 from .optimizer import OptimizerConfig, PickOptimizer
 from .slate import Slate
 
@@ -68,7 +69,7 @@ def format_options(rec: dict, limit: int = 10) -> str:
     lines = []
     mode = rec["mode"]
     header = (
-        f"pick {rec['pick']} (drafter {rec['seat'] + 1}/6, "
+        f"pick {rec['pick']} (drafter {rec['seat'] + 1}, "
         f"next own pick: {rec['next_own_pick']})"
         f" — {'JOINT PAIR' if mode == 'pair' else 'single pick'}"
     )
@@ -114,18 +115,21 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--history", default="", help="comma-separated picks so far, in order")
     ap.add_argument("--interactive", action="store_true")
     ap.add_argument("--fast", action="store_true", help="lighter sims for live use")
+    ap.add_argument("--format", default="battle_royale", dest="fmt",
+                    help="contest format key from battle_royale/data/formats.json")
     ap.add_argument("--contest-size", type=int, default=70_000)
     ap.add_argument("--payouts", default=None,
                     help="prize-table JSON path (default: packaged real table if present)")
     ap.add_argument("--seed", type=int, default=20260912)
     args = ap.parse_args(argv)
-    if not 0 <= args.seat <= 5:
-        ap.error("--seat must be 0-5 (your pick order minus one)")
+    fmt = get_format(args.fmt)
+    if not 0 <= args.seat < fmt.seats:
+        ap.error(f"--seat must be 0-{fmt.seats - 1} (your pick order minus one)")
 
-    engine = BattleRoyaleEngine.from_csv(args.csv, seed=args.seed)
+    engine = BattleRoyaleEngine.from_csv(args.csv, seed=args.seed, fmt=fmt)
     config = OptimizerConfig.fast() if args.fast else OptimizerConfig()
     config.seed = args.seed
-    curve, _ = load_payout_table(args.payouts)
+    curve, _ = load_payout_table(args.payouts, filename=fmt.payouts_file)
     optimizer = PickOptimizer(
         engine, TournamentModel(contest_size=args.contest_size, curve=curve), config
     )
@@ -171,7 +175,7 @@ def main(argv: list[str] | None = None) -> int:
         if cmd == "board":
             _print_board(state)
         elif cmd == "roster":
-            for seat in range(6):
+            for seat in range(fmt.seats):
                 names = ", ".join(engine.slate.players[i].name for i in state.rosters[seat])
                 you = " (YOU)" if seat == args.seat else ""
                 print(f"  seat {seat}{you}: {names}")

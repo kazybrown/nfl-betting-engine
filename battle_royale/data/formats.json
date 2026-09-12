@@ -1,0 +1,16 @@
+{
+  "comment": "Structural registry of Underdog 6-man weekly NFL draft formats. Only formats with VERIFIED structure belong here - never guess rounds or roster bounds. roster_min/roster_max keys are QB/RB/WR/TE. payouts_file names a JSON in this directory with that contest's prize table.",
+  "formats": [
+    {
+      "key": "battle_royale",
+      "name": "Battle Royale",
+      "seats": 6,
+      "rounds": 6,
+      "roster_min": {"QB": 1, "RB": 1, "WR": 2, "TE": 1},
+      "roster_max": {"QB": 1, "RB": 2, "WR": 3, "TE": 2},
+      "default_contest_size": 70000,
+      "payouts_file": "payouts.json",
+      "notes": "Flagship weekly: QB/RB/WR/WR/TE/FLEX, one pooled tournament; 2023-24 fields ran 28-68k entries."
+    }
+  ]
+}

@@ -43,8 +43,12 @@ class BattleRoyaleEngine:
         self.rng = np.random.default_rng(seed)
 
     @classmethod
-    def from_csv(cls, path: str | Path, seed: int | None = None, **kwargs) -> BattleRoyaleEngine:
-        return cls(Slate.from_csv(path), seed=seed, **kwargs)
+    def from_csv(
+        cls, path: str | Path, seed: int | None = None, fmt=None, **kwargs
+    ) -> BattleRoyaleEngine:
+        """``fmt`` is a :class:`battle_royale.formats.ContestFormat`; default
+        Battle Royale."""
+        return cls(Slate.from_csv(path, fmt=fmt), seed=seed, **kwargs)
 
     # ------------------------------------------------------------------
 

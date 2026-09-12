@@ -37,8 +37,8 @@ from battle_royale import (
     TournamentModel,
 )
 from battle_royale.cache import DEFAULT_CACHE_DIR
-from battle_royale.constants import picks_of_seat
 from battle_royale.equity import load_payout_table
+from battle_royale.formats import get_format
 
 
 def sample_board(engine, our_picks: dict[int, int], upto_pick: int, seed: int) -> DraftState:
@@ -64,7 +64,7 @@ def build_seat_plan(opt: PickOptimizer, seat0: int, n_boards: int, avail_boards:
                     base_seed: int) -> dict:
     engine = opt.engine
     s = opt.slate
-    own_slots = picks_of_seat(seat0)
+    own_slots = s.fmt.picks_of_seat(seat0)
     our_picks: dict[int, int] = {}
     slots_out = []
 
@@ -148,7 +148,10 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--csv", required=True)
     ap.add_argument("--out", default="reports/battle_royale/draft_plan.json")
-    ap.add_argument("--seats", nargs="+", type=int, default=[1, 2, 3, 4, 5, 6])
+    ap.add_argument("--format", default="battle_royale", dest="fmt",
+                    help="contest format key from battle_royale/data/formats.json")
+    ap.add_argument("--seats", nargs="+", type=int, default=None,
+                    help="seats to plan (default: all)")
     ap.add_argument("--boards", type=int, default=6)
     ap.add_argument("--avail-boards", type=int, default=250)
     ap.add_argument("--contest-size", type=int, default=70_000)
@@ -162,8 +165,10 @@ def main() -> None:
     from battle_royale.external import load_game_lines, load_player_status, slate_status
     from battle_royale.slate import Slate
 
+    fmt = get_format(args.fmt)
+    seats = args.seats or list(range(1, fmt.seats + 1))
     lines, statuses = {}, {}
-    slate_obj = Slate.from_csv(args.csv)
+    slate_obj = Slate.from_csv(args.csv, fmt=fmt)
     if args.season and args.week:
         lines = load_game_lines(args.season, args.week)
         statuses = slate_status(slate_obj, load_player_status(args.season, args.week))
@@ -186,8 +191,9 @@ def main() -> None:
     cfg.n_rollouts = 60
     cfg.seed = args.seed
     cfg.cache_dir = str(DEFAULT_CACHE_DIR)
-    curve, pay_meta = load_payout_table(args.payouts)
-    print(f"payout curve: {pay_meta.get('contest', pay_meta['source'])}")
+    curve, pay_meta = load_payout_table(args.payouts, filename=fmt.payouts_file)
+    print(f"format: {fmt.name} ({fmt.seats} seats x {fmt.rounds} rounds); "
+          f"payout curve: {pay_meta.get('contest', pay_meta['source'])}")
     opt = PickOptimizer(
         engine, TournamentModel(contest_size=args.contest_size, curve=curve), cfg
     )
@@ -210,7 +216,15 @@ def main() -> None:
                 synergy.append([i, j, round(0.35 * c / 10.0, 3)])
 
     plan = {
-        "generated_for": "Underdog Battle Royale",
+        "generated_for": f"Underdog {fmt.name}",
+        "format": {
+            "key": fmt.key,
+            "name": fmt.name,
+            "seats": fmt.seats,
+            "rounds": fmt.rounds,
+            "pos_min": dict(zip(("QB", "RB", "WR", "TE"), fmt.roster_min)),
+            "pos_max": dict(zip(("QB", "RB", "WR", "TE"), fmt.roster_max)),
+        },
         "contest_size": args.contest_size,
         "payouts": pay_meta.get("contest", pay_meta["source"]),
         "players": [
@@ -233,7 +247,7 @@ def main() -> None:
         "synergy": synergy,
         "seats": {},
     }
-    for lobby_seat in args.seats:
+    for lobby_seat in seats:
         t0 = time.time()
         plan["seats"][str(lobby_seat)] = build_seat_plan(
             opt, lobby_seat - 1, args.boards, args.avail_boards, args.seed

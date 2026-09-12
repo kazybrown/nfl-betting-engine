@@ -1,4 +1,4 @@
-<title>Battle Royale Draft Companion</title>
+<title>__FMT_NAME__ Draft Companion</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   :root {
@@ -183,14 +183,19 @@
       taking that player instead of the top card. The gold bar under each row shows
       relative standing. "board %" is the live ADP-inferred chance the player is
       still available; dimmed rows are probably gone (gold strip flags slid values
-      worth taking anyway). Hard legality enforced: 1 QB, 1-2 RB, 2-3 WR, 1-2 TE.</footer>
+      worth taking anyway). <span id="legalrule"></span></footer>
   </div>
 </div>
 <script>
 const PLAN = __PLAN_JSON__;
 
-const POS_MIN = {QB:1, RB:1, WR:2, TE:1};
-const POS_MAX = {QB:1, RB:2, WR:3, TE:2};
+// Contest structure ships with the plan; older plans without a format block
+// fall back to Battle Royale's shape.
+const FMT = PLAN.format || {key: "battle_royale", name: "Battle Royale", seats: 6, rounds: 6,
+  pos_min: {QB:1, RB:1, WR:2, TE:1}, pos_max: {QB:1, RB:2, WR:3, TE:2}};
+const POS_MIN = FMT.pos_min;
+const POS_MAX = FMT.pos_max;
+const R_SIZE = FMT.rounds;   // every pick fills a roster slot
 // Queue order = ETR rank order, unless a player is gone/illegal or roster
 // correlation outweighs the rank gap. RANK_GAP is the score distance between
 // adjacent ETR ranks, so a full stack bonus (+0.75 clamped x 1.6) can lift a
@@ -229,7 +234,7 @@ function pAvail(pl, pickNo) {
 // and an unfilled WR2 gets a mild push before the endgame forces it.
 function needBonus(pos, roster) {
   const c = posCounts(roster);
-  const left = 6 - roster.length;
+  const left = R_SIZE - roster.length;
   let b = 0;
   if (pos === "QB" && c.QB === 0) b += left <= 2 ? 0.30 : left <= 3 ? 0.12 : 0;
   if (pos === "TE" && c.TE >= 1) b -= 0.35;
@@ -257,7 +262,7 @@ function posCounts(roster) {
 }
 function legalPositions(roster) {
   const c = posCounts(roster);
-  const left = 6 - roster.length;
+  const left = R_SIZE - roster.length;
   const needed = Object.entries(POS_MIN).map(([p, m]) => [p, Math.max(m - c[p], 0)]);
   const needSum = needed.reduce((a, [, n]) => a + n, 0);
   const ok = new Set();
@@ -303,9 +308,9 @@ function render() {
   const roster = S.roster;
   $("roster").innerHTML = roster.map(i =>
     `<span class="chip">${P[i].name} <i>${P[i].pos}·${P[i].team}</i></span>`
-  ).join("") + Array(6 - roster.length).fill('<span class="chip empty">—</span>').join("");
+  ).join("") + Array(R_SIZE - roster.length).fill('<span class="chip empty">—</span>').join("");
 
-  if (roster.length >= 6) {
+  if (roster.length >= R_SIZE) {
     $("onclock").textContent = `Seat ${S.seat} — done`;
     $("qtitle").textContent = ""; $("qhint").textContent = "";
     $("queue").innerHTML = ""; $("must").hidden = true;
@@ -468,7 +473,7 @@ function render() {
 }
 
 function takePlayer(id) {
-  if (S.roster.length >= 6 || S.roster.includes(id)) return;
+  if (S.roster.length >= R_SIZE || S.roster.includes(id)) return;
   S.roster.push(id); S.hist.push(["take", id]);
   S.gone = S.gone.filter(g => g !== id);
   render(); $("search").value = ""; renderSearch("");
@@ -522,8 +527,14 @@ $("reset").addEventListener("click", () => {
 });
 $("search").addEventListener("input", (e) => renderSearch(e.target.value));
 
+document.querySelector(".eyebrow").textContent =
+  `Underdog · ${FMT.name} · live draft companion`;
+$("legalrule").textContent = "Hard legality enforced: " +
+  Object.keys(POS_MIN).map(p =>
+    POS_MIN[p] === POS_MAX[p] ? `${POS_MIN[p]} ${p}` : `${POS_MIN[p]}-${POS_MAX[p]} ${p}`
+  ).join(", ") + ".";
 const grid = $("seatgrid");
-for (let seat = 1; seat <= 6; seat++) {
+for (let seat = 1; seat <= FMT.seats; seat++) {
   const picks = PLAN.seats[String(seat)].own_picks.join(" · ");
   grid.insertAdjacentHTML("beforeend",
     `<button class="seatbtn" data-seat="${seat}"><b>${seat}</b><span>picks ${picks}</span></button>`);
