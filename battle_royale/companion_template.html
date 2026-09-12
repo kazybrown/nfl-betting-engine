@@ -175,8 +175,9 @@
     <footer>Objective: win the contest. Each card's WIN SCORE = value backbone (ETR
       rank + the engine's tournament-equity votes, scored for 1st place vs a
       calibrated 70k field with duplicate prize sharing) plus the labeled chips:
-      stack/overlap correlation with your roster, now-or-wait (the drop-off vs the
-      best expected survivor at that position at YOUR next pick), leverage
+      stack/overlap correlation with your roster, can wait (the equity a player
+      keeps if passed on — his odds of surviving to your next real turn times his
+      worth, less what taking him now displaces from your remaining picks), leverage
       (position-aware, QB-heavy, capped), roster need, slid value and injury. Chips
       sum with the base to the score, so "−0.8 vs #1" is literally the equity cost of
       taking that player instead of the top card. The gold bar under each row shows
@@ -199,14 +200,13 @@ const POS_MAX = {QB:1, RB:2, WR:3, TE:2};
 // tournament-equity signal (rollouts scored for 1st-place payout against a
 // calibrated 70k field, duplication sharing included) + stack correlation +
 // construction + position-aware leverage (real winners ran chalk RB/TE cores
-// and took their ownership leverage at QB), then sequenced by positional
-// urgency and weighted by live on-board probability.
+// and took their ownership leverage at QB), then sequenced by the can-wait
+// option-value penalty and bucketed by live on-board probability.
 const SYNERGY_WEIGHT = 1.6;
 const RANK_GAP = 0.08;
 const EQUITY_WEIGHT = 0.7;      // engine win-equity votes (0..1 per slot)
 const ADP_SIGMA = 3.4;          // calibrated ADP execution spread (real archives)
 const LIKELY_GONE = 0.35;       // below this availability a row dims
-const URGENCY_WEIGHT = 1.0;     // positional drop-off to YOUR next pick
 const DROP_BONUS = 0.04;        // per pick of ADP slide for a still-there value
 const DROP_CAP = 0.5;
 // Leverage: (1 - room%) scaled by position; capped so it never lifts a player
@@ -336,16 +336,19 @@ function render() {
   // overrides: dropped values and high positive correlation.
   //   1. Base worth: ETR rank + stack correlation with your picks + soft
   //      construction terms (all roster-conditional).
-  //   2. Positional urgency: how much of that worth evaporates if you wait
-  //      for your NEXT pick (drop-off vs the best expected survivor at the
-  //      same position) — this sequences positions optimally from your
-  //      previous picks: take what won't come back, wait on what will.
+  //   2. Can-wait penalty: a player who will still be there at your next
+  //      real turn is charged the equity waiting preserves — this sequences
+  //      positions optimally: take what won't come back, wait on what will.
   //   3. Dropped-value bonus for players sliding past their ADP.
   //   4. Weighted by ADP-inferred on-board probability (opponents' picks
   //      accounted for without marking them).
   const qmeta = new Map(cur.sl.queue.map(q => [q.id, q]));
   const ownPicks = PLAN.seats[String(S.seat)].own_picks;
   const nextOwn = ownPicks.find(p => p > pickNo) || null;
+  // Waiting horizon: at the first pick of a back-to-back turn the real wait
+  // is to the pick AFTER the pair, not the riskless adjacent pick.
+  const horizon = ownPicks.find(p => p >= pickNo + 2) || null;
+  const picksAfterThis = ownPicks.filter(p => p > pickNo).length;
 
   const cands = P
     .filter(pl => !taken.has(pl.id) && ok.has(pl.pos))
@@ -367,33 +370,32 @@ function render() {
       const u = parts.value + parts.stack + parts.need + parts.leverage + parts.injury;
       return {id: pl.id, pos: pl.pos, u, injGone, parts,
               pav: pAvail(pl, pickNo),
-              pavNext: nextOwn ? pAvail(pl, nextOwn) : 0,
+              pavWait: horizon ? pAvail(pl, horizon) : 0,
               pairs_with: q ? q.pairs_with : []};
     });
 
-  // Best expected worth still on the board at your next pick, per position.
-  const bestLater = {QB: 0, RB: 0, WR: 0, TE: 0};
-  if (nextOwn) {
-    for (const c of cands) {
-      bestLater[c.pos] = Math.max(bestLater[c.pos], c.u * c.pavNext);
-    }
-  }
+  // Option value of waiting: each candidate's expected value if passed on
+  // (on-board odds at the waiting horizon x his worth). Your remaining picks
+  // can harvest the top R wait-values regardless, so drafting a waitable
+  // player NOW only displaces the (R+1)-th best wait-value — that margin is
+  // the "can wait" penalty. Vanishing players pay nothing; players who will
+  // still be there for you are demoted by exactly what waiting preserves.
+  const waitVals = cands.filter(c => !c.injGone)
+    .map(c => c.pavWait * c.u).sort((a, b) => b - a);
+  const displaced = waitVals[picksAfterThis] || 0;
 
   // Availability does NOT discount the current pick's worth — the user is
   // looking at their lobby board and takes the highest name actually there.
   // It only buckets rows: probably-gone players render dimmed at the bottom
-  // (and elite ones in the slid strip). The future stays probabilistic:
-  // urgency uses on-board odds at the NEXT pick, capped so early-draft
-  // scarcity never swamps player worth.
+  // (and elite ones in the slid strip).
   const rows = cands
     .map(c => {
-      const urgency = nextOwn
-        ? Math.min(Math.max(0, c.u - bestLater[c.pos]), 1.2) : 0;
+      const canWait = Math.max(0, c.pavWait * c.u - displaced);
       const drop = Math.min(DROP_BONUS * Math.max(0, pickNo - P[c.id].adp), DROP_CAP);
-      c.parts.scarcity = URGENCY_WEIGHT * urgency;
+      c.parts.wait = -canWait;
       c.parts.slid = drop;
       return {...c, gone: c.pav < LIKELY_GONE || c.injGone,
-              adj: c.u + c.parts.scarcity + c.parts.slid};
+              adj: c.u - canWait + drop};
     })
     .sort((a, b) => (a.gone - b.gone) || (b.adj - a.adj));
 
@@ -415,7 +417,7 @@ function render() {
   const lastShown = rows.slice(0, 12);
   const minAdj = Math.min(...lastShown.map(r => r.adj));
   const span = Math.max(topAdj - minAdj, 0.5);
-  const CHIP_LABELS = {scarcity: "now-or-wait", leverage: "leverage", slid: "slid value",
+  const CHIP_LABELS = {wait: "can wait", leverage: "leverage", slid: "slid value",
                        need: "roster need", injury: "injury"};
 
   $("queue").innerHTML = lastShown.map((q, k) => {
