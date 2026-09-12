@@ -736,10 +736,10 @@
         "RB"
       ],
       "value": 28.685199048560005,
-      "expected_payout": 11.070640572916666,
-      "win_rate_vs_sample": 0.0014444444444444446,
-      "p_top_1pct": 0.023550000000000005,
-      "mean_completed_score": 88.2836134623553,
+      "expected_payout": 10.901420798611111,
+      "win_rate_vs_sample": 0.0014222222222222225,
+      "p_top_1pct": 0.023327777777777777,
+      "mean_completed_score": 88.0201489184799,
       "adp_delta": [
         0.10000000000000009
       ],
@@ -767,10 +767,10 @@
         "WR"
       ],
       "value": 22.072576557383574,
-      "expected_payout": 10.964186197916668,
-      "win_rate_vs_sample": 0.001472222222222222,
-      "p_top_1pct": 0.022455555555555555,
-      "mean_completed_score": 84.99671667039999,
+      "expected_payout": 10.251215746527778,
+      "win_rate_vs_sample": 0.0013722222222222222,
+      "p_top_1pct": 0.02348888888888889,
+      "mean_completed_score": 85.03362000510513,
       "adp_delta": [
         3.0
       ],
@@ -798,10 +798,10 @@
         "TE"
       ],
       "value": 17.07232169491462,
-      "expected_payout": 6.043306822916666,
-      "win_rate_vs_sample": 0.0008,
-      "p_top_1pct": 0.010872222222222224,
-      "mean_completed_score": 81.08716749767925,
+      "expected_payout": 6.461093315972223,
+      "win_rate_vs_sample": 0.0008722222222222223,
+      "p_top_1pct": 0.01073888888888889,
+      "mean_completed_score": 80.99467955254788,
       "adp_delta": [
         12.0
       ],
@@ -823,47 +823,16 @@
     },
     {
       "players": [
-        "Jared Goff"
-      ],
-      "positions": [
-        "QB"
-      ],
-      "value": 24.07867107360431,
-      "expected_payout": 6.005090763888889,
-      "win_rate_vs_sample": 0.0007611111111111112,
-      "p_top_1pct": 0.013672222222222223,
-      "mean_completed_score": 82.66839555215698,
-      "adp_delta": [
-        32.5
-      ],
-      "room_drafted_rate": [
-        0.406
-      ],
-      "stack_notes": [
-        ""
-      ],
-      "example_completion": [
-        "Jared Goff",
-        "Jameson Williams",
-        "Chris Olave",
-        "Sam LaPorta",
-        "Ashton Jeanty",
-        "D'Andre Swift"
-      ],
-      "survival_to_next_pick": 1.0
-    },
-    {
-      "players": [
         "Trevor Lawrence"
       ],
       "positions": [
         "QB"
       ],
       "value": 23.860498544484102,
-      "expected_payout": 5.87016967013889,
-      "win_rate_vs_sample": 0.0006888888888888888,
-      "p_top_1pct": 0.014377777777777778,
-      "mean_completed_score": 77.63839375841214,
+      "expected_payout": 5.782027413194444,
+      "win_rate_vs_sample": 0.0006999999999999999,
+      "p_top_1pct": 0.013722222222222224,
+      "mean_completed_score": 77.56238218747406,
       "adp_delta": [
         34.2
       ],
@@ -885,16 +854,47 @@
     },
     {
       "players": [
+        "Jared Goff"
+      ],
+      "positions": [
+        "QB"
+      ],
+      "value": 24.07867107360431,
+      "expected_payout": 5.6529996874999995,
+      "win_rate_vs_sample": 0.0007055555555555555,
+      "p_top_1pct": 0.013955555555555554,
+      "mean_completed_score": 82.67048615580889,
+      "adp_delta": [
+        32.5
+      ],
+      "room_drafted_rate": [
+        0.406
+      ],
+      "stack_notes": [
+        ""
+      ],
+      "example_completion": [
+        "Jared Goff",
+        "Jameson Williams",
+        "Chris Olave",
+        "Sam LaPorta",
+        "Ashton Jeanty",
+        "D'Andre Swift"
+      ],
+      "survival_to_next_pick": 1.0
+    },
+    {
+      "players": [
         "Colston Loveland"
       ],
       "positions": [
         "TE"
       ],
       "value": 15.905134023762436,
-      "expected_payout": 4.833076857638889,
-      "win_rate_vs_sample": 0.0006222222222222221,
-      "p_top_1pct": 0.014099999999999998,
-      "mean_completed_score": 77.12490639048163,
+      "expected_payout": 4.9277422743055554,
+      "win_rate_vs_sample": 0.0006444444444444444,
+      "p_top_1pct": 0.014072222222222219,
+      "mean_completed_score": 76.99111320666734,
       "adp_delta": [
         13.1
       ],
@@ -907,8 +907,8 @@
       "example_completion": [
         "Colston Loveland",
         "Caleb Williams",
+        "Jonathan Taylor",
         "Luther Burden",
-        "James Cook",
         "Ashton Jeanty",
         "Tetairoa McMillan"
       ],
@@ -922,10 +922,10 @@
         "QB"
       ],
       "value": 23.96968564582967,
-      "expected_payout": 4.01189265625,
-      "win_rate_vs_sample": 0.0005,
-      "p_top_1pct": 0.01105,
-      "mean_completed_score": 78.7208477936515,
+      "expected_payout": 4.575065208333334,
+      "win_rate_vs_sample": 0.0005833333333333332,
+      "p_top_1pct": 0.011111111111111112,
+      "mean_completed_score": 78.80391881201827,
       "adp_delta": [
         32.6
       ],
@@ -953,10 +953,10 @@
         "RB"
       ],
       "value": 23.764092303872214,
-      "expected_payout": 3.795542274305555,
-      "win_rate_vs_sample": 0.0004222222222222223,
-      "p_top_1pct": 0.014983333333333333,
-      "mean_completed_score": 85.23513969128808,
+      "expected_payout": 4.275253732638888,
+      "win_rate_vs_sample": 0.0005055555555555556,
+      "p_top_1pct": 0.014911111111111113,
+      "mean_completed_score": 85.18736450314036,
       "adp_delta": [
         2.1
       ],
@@ -971,8 +971,8 @@
         "Jalen Hurts",
         "DeVonta Smith",
         "Ashton Jeanty",
-        "Parker Washington",
-        "Dallas Goedert"
+        "Dallas Goedert",
+        "Garrett Wilson"
       ],
       "survival_to_next_pick": 0.0
     },
@@ -984,10 +984,10 @@
         "QB"
       ],
       "value": 25.05857452415473,
-      "expected_payout": 3.6977214583333335,
-      "win_rate_vs_sample": 0.00045000000000000004,
-      "p_top_1pct": 0.01013888888888889,
-      "mean_completed_score": 81.06225340596538,
+      "expected_payout": 4.098915763888888,
+      "win_rate_vs_sample": 0.0005222222222222222,
+      "p_top_1pct": 0.010255555555555556,
+      "mean_completed_score": 81.06186488833232,
       "adp_delta": [
         30.7
       ],
@@ -1000,10 +1000,10 @@
       "example_completion": [
         "Justin Herbert",
         "Ladd McConkey",
+        "Saquon Barkley",
         "Quentin Johnston",
-        "D'Andre Swift",
-        "James Cook",
-        "Sam LaPorta"
+        "Ashton Jeanty",
+        "Charlie Kolar"
       ],
       "survival_to_next_pick": 1.0
     },
@@ -1015,10 +1015,10 @@
         "WR"
       ],
       "value": 23.862306930788556,
-      "expected_payout": 3.622659809027778,
-      "win_rate_vs_sample": 0.0003388888888888889,
-      "p_top_1pct": 0.018394444444444442,
-      "mean_completed_score": 86.92817893138407,
+      "expected_payout": 4.011032100694445,
+      "win_rate_vs_sample": 0.0003833333333333334,
+      "p_top_1pct": 0.018655555555555557,
+      "mean_completed_score": 87.19287670167932,
       "adp_delta": [
         1.4
       ],
@@ -1031,10 +1031,10 @@
       "example_completion": [
         "Ja'Marr Chase",
         "Joe Burrow",
-        "Derrick Henry",
+        "Tee Higgins",
         "Ashton Jeanty",
-        "Emeka Egbuka",
-        "Sam LaPorta"
+        "Bucky Irving",
+        "Michael Mayer"
       ],
       "survival_to_next_pick": 0.0
     }
@@ -1055,8 +1055,8 @@
         "Joe Burrow",
         "Ashton Jeanty",
         "Tetairoa McMillan",
-        "Sam LaPorta",
-        "Garrett Wilson"
+        "Emeka Egbuka",
+        "Juwan Johnson"
       ],
       "decisions": [
         {
@@ -1065,7 +1065,7 @@
           "selection": [
             "Jahmyr Gibbs"
           ],
-          "expected_payout": 11.070640572916666,
+          "expected_payout": 10.901420798611111,
           "runner_up": [
             "Amon-Ra St. Brown"
           ]
@@ -1077,7 +1077,7 @@
             "Joe Burrow",
             "Ashton Jeanty"
           ],
-          "expected_payout": 14.390767309027778,
+          "expected_payout": 14.006332135416669,
           "runner_up": [
             "Joe Burrow",
             "Zay Flowers"
@@ -1088,23 +1088,23 @@
           "mode": "pair",
           "selection": [
             "Tetairoa McMillan",
-            "Sam LaPorta"
+            "Emeka Egbuka"
           ],
-          "expected_payout": 17.217705208333346,
+          "expected_payout": 17.34409619791667,
           "runner_up": [
             "Tetairoa McMillan",
-            "Emeka Egbuka"
+            "Sam LaPorta"
           ]
         },
         {
           "pick": 36,
           "mode": "single",
           "selection": [
-            "Garrett Wilson"
+            "Juwan Johnson"
           ],
-          "expected_payout": 19.115108333333332,
+          "expected_payout": 18.2807625,
           "runner_up": [
-            "Emeka Egbuka"
+            "Michael Mayer"
           ]
         }
       ]
@@ -1134,7 +1134,7 @@
           "selection": [
             "Amon-Ra St. Brown"
           ],
-          "expected_payout": 11.288061145833332,
+          "expected_payout": 11.212158263888886,
           "runner_up": [
             "Trey McBride"
           ]
@@ -1145,7 +1145,7 @@
           "selection": [
             "Chris Olave"
           ],
-          "expected_payout": 15.063586493055558,
+          "expected_payout": 13.856867899305557,
           "runner_up": [
             "Ashton Jeanty"
           ]
@@ -1156,7 +1156,7 @@
           "selection": [
             "Ashton Jeanty"
           ],
-          "expected_payout": 19.196413333333332,
+          "expected_payout": 18.823999878472225,
           "runner_up": [
             "Trevor Lawrence"
           ]
@@ -1167,7 +1167,7 @@
           "selection": [
             "Tyler Shough"
           ],
-          "expected_payout": 23.489059201388883,
+          "expected_payout": 23.051854097222215,
           "runner_up": [
             "Breece Hall"
           ]
@@ -1209,10 +1209,10 @@
       "roster": [
         "Jahmyr Gibbs",
         "Jared Goff",
-        "James Cook",
+        "Travis Etienne Jr.",
         "Garrett Wilson",
-        "Sam LaPorta",
-        "Christian Watson"
+        "Jameson Williams",
+        "Juwan Johnson"
       ],
       "decisions": [
         {
@@ -1221,9 +1221,9 @@
           "selection": [
             "Jahmyr Gibbs"
           ],
-          "expected_payout": 10.799737048611114,
+          "expected_payout": 10.640742986111112,
           "runner_up": [
-            "Justin Jefferson"
+            "Chris Olave"
           ]
         },
         {
@@ -1232,20 +1232,20 @@
           "selection": [
             "Jared Goff"
           ],
-          "expected_payout": 11.385215416666664,
+          "expected_payout": 11.733779809027778,
           "runner_up": [
-            "De'Von Achane"
+            "Omarion Hampton"
           ]
         },
         {
           "pick": 15,
           "mode": "single",
           "selection": [
-            "James Cook"
-          ],
-          "expected_payout": 13.465208350694445,
-          "runner_up": [
             "Travis Etienne Jr."
+          ],
+          "expected_payout": 14.14799267361111,
+          "runner_up": [
+            "James Cook"
           ]
         },
         {
@@ -1254,31 +1254,31 @@
           "selection": [
             "Garrett Wilson"
           ],
-          "expected_payout": 15.303079635416667,
+          "expected_payout": 16.13105579861111,
           "runner_up": [
-            "Sam LaPorta"
+            "Jameson Williams"
           ]
         },
         {
           "pick": 27,
           "mode": "single",
           "selection": [
-            "Sam LaPorta"
-          ],
-          "expected_payout": 16.047241718749998,
-          "runner_up": [
             "Jameson Williams"
+          ],
+          "expected_payout": 16.16402230902778,
+          "runner_up": [
+            "Sam LaPorta"
           ]
         },
         {
           "pick": 34,
           "mode": "single",
           "selection": [
-            "Christian Watson"
+            "Juwan Johnson"
           ],
-          "expected_payout": 18.365229166666666,
+          "expected_payout": 17.84112291666667,
           "runner_up": [
-            "DK Metcalf"
+            "Dallas Goedert"
           ]
         }
       ]
@@ -1308,7 +1308,7 @@
           "selection": [
             "Amon-Ra St. Brown"
           ],
-          "expected_payout": 9.981565625,
+          "expected_payout": 10.585389809027777,
           "runner_up": [
             "Chris Olave"
           ]
@@ -1319,7 +1319,7 @@
           "selection": [
             "Jonathan Taylor"
           ],
-          "expected_payout": 19.4020321875,
+          "expected_payout": 19.32283565972222,
           "runner_up": [
             "Trevor Lawrence"
           ]
@@ -1330,7 +1330,7 @@
           "selection": [
             "Sam LaPorta"
           ],
-          "expected_payout": 21.12234387152778,
+          "expected_payout": 20.664148090277777,
           "runner_up": [
             "Ashton Jeanty"
           ]
@@ -1341,7 +1341,7 @@
           "selection": [
             "Trevor Lawrence"
           ],
-          "expected_payout": 22.75809763888889,
+          "expected_payout": 22.853383454861113,
           "runner_up": [
             "Ashton Jeanty"
           ]
@@ -1395,7 +1395,7 @@
           "selection": [
             "Chris Olave"
           ],
-          "expected_payout": 10.791083281250001,
+          "expected_payout": 10.462635798611112,
           "runner_up": [
             "Amon-Ra St. Brown"
           ]
@@ -1406,7 +1406,7 @@
           "selection": [
             "Nico Collins"
           ],
-          "expected_payout": 16.511778038194443,
+          "expected_payout": 15.58914986111111,
           "runner_up": [
             "Derrick Henry"
           ]
@@ -1417,7 +1417,7 @@
           "selection": [
             "Ashton Jeanty"
           ],
-          "expected_payout": 16.431394114583334,
+          "expected_payout": 16.740374635416668,
           "runner_up": [
             "James Cook"
           ]
@@ -1428,7 +1428,7 @@
           "selection": [
             "Breece Hall"
           ],
-          "expected_payout": 17.73906609375,
+          "expected_payout": 17.762890972222223,
           "runner_up": [
             "James Cook"
           ]
@@ -1468,10 +1468,10 @@
         31
       ],
       "roster": [
-        "Derrick Henry",
         "Chris Olave",
-        "Justin Herbert",
+        "Derrick Henry",
         "Omarion Hampton",
+        "Justin Herbert",
         "Tetairoa McMillan",
         "Michael Mayer"
       ],
@@ -1480,10 +1480,10 @@
           "pick": 6,
           "mode": "pair",
           "selection": [
-            "Derrick Henry",
-            "Chris Olave"
+            "Chris Olave",
+            "Derrick Henry"
           ],
-          "expected_payout": 13.397780225694445,
+          "expected_payout": 14.070424513888888,
           "runner_up": [
             "De'Von Achane",
             "Justin Jefferson"
@@ -1493,10 +1493,10 @@
           "pick": 18,
           "mode": "pair",
           "selection": [
-            "Justin Herbert",
-            "Omarion Hampton"
+            "Omarion Hampton",
+            "Justin Herbert"
           ],
-          "expected_payout": 14.117894751012813,
+          "expected_payout": 13.961114448777838,
           "runner_up": [
             "Ashton Jeanty",
             "Tee Higgins"

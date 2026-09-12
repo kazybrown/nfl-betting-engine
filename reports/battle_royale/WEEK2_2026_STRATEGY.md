@@ -6,18 +6,28 @@ Week 2 had 67,986). Full machine-readable detail: `week_report.json`.
 
 ## The one-paragraph version
 
-Open with **Amon-Ra St. Brown or Jahmyr Gibbs** from any early seat (the model
-slightly prefers St. Brown for completion upside; both are ~co-equal within
-noise). The single biggest market inefficiency on the slate is **Ashton Jeanty
-(rank 18, ADP 25.1, drafted in only 44% of rooms)** — he survives to pick 19
-essentially always and to pick 25 in 92% of rooms, so he anchors rounds 4–5 in
-almost every model-guided build. **Sam LaPorta (rank 23, ADP 28.4, 63% own)**
-is the same trade at TE. Take QB late: Goff/Lawrence-tier QBs survive the
-first turn 100% of the time, and five of the six model-guided drafts wait on
-QB until round 4+. Stack when the cost is small (Goff + St. Brown/LaPorta
-completions appear constantly), and prefer the cheap leverage the market
-ignores over forced contrarianism — the equity objective already prices
-duplication sharing.
+Open with **Jahmyr Gibbs or Amon-Ra St. Brown** from any early seat — they are
+co-1A on tournament equity and clear of everything else. The single biggest
+market inefficiency on the slate is **Ashton Jeanty (rank 18, ADP 25.1,
+drafted in only 44% of rooms)** — he survives to pick 19 essentially always
+and to pick 25 in 92% of rooms, so he anchors rounds 4–5 in most model-guided
+builds; **Sam LaPorta (rank 23, ADP 28.4, 63% own)** is the same trade at TE.
+Take QB late and take him as your leverage: the Goff/Lawrence tier survives
+the first turn 100% of the time, every model draft waits on QB, and under the
+winner-heavy payout structure the engine repeatedly lands on low-owned QB
+stacks (Lawrence 21% own, Herbert 60%, even Shough 9%) attached to a chalk
+skill core — which is exactly the shape of real historical Battle Royale
+winners (strong RB/TE cores, QB as the concentrated leverage). Do not chase
+uniqueness at RB/WR for its own sake: the equity objective already prices
+duplication sharing, and it keeps choosing the chalk core anyway.
+
+A note on the equity mechanics: under a jackpot-heavy payout curve, what
+separates candidates at the very top is not raw ceiling (per-roster score
+distributions are nearly identical across the top archetypes) but how often
+your ceiling arrives when the field's does NOT. Fully-chalk builds spike
+exactly when the field's thousands of near-copies spike, so they rarely clear
+the field max; a differentiated stack spikes idiosyncratically. That — not a
+uniqueness bonus — is why the model attaches leverage QBs to chalk cores.
 
 ## Survival cliffs (P(still available) when pick N is on the clock)
 
@@ -57,32 +67,43 @@ Tactical reads:
 
 | pick 1 candidate | equity | P(top 1%) | completed-roster mean |
 |---|---|---|---|
-| Amon-Ra St. Brown | 1.58 | 2.5% | 85.3 |
-| Jahmyr Gibbs | 1.49 | 2.1% | 87.2 |
-| Ja'Marr Chase | 1.12 | 1.8% | 85.7 |
-| Trey McBride | 1.11 | 1.2% | 75.0 |
-| Jared Goff | 0.97 | 1.4% | 82.5 |
-| Bijan Robinson | 0.87 | 1.4% | 84.8 |
+| Jahmyr Gibbs | 10.9 | 2.3% | 88.0 |
+| Amon-Ra St. Brown | 10.3 | 2.4% | 85.0 |
+| Trey McBride | 6.5 | 1.1% | 81.0 |
+| Trevor Lawrence | 5.8 | 1.4% | 77.6 |
+| Jared Goff | 5.7 | 1.4% | 82.7 |
+| Colston Loveland | 4.9 | 1.4% | 77.0 |
+| Bijan Robinson | 4.3 | 1.5% | 85.2 |
+| Ja'Marr Chase | 4.0 | 1.9% | 87.2 |
 
-St. Brown vs Gibbs is within noise; both are correct. Everything that
-survives to pick 12 (QBs, TEs) is a value leak at 1.01 — the survival
-discount is priced in.
+Gibbs vs St. Brown is within noise; both are correct and clearly ahead.
+Absolute equity multiples depend on the (generic) payout curve; the ranking
+is the decision-relevant output. Chase's placement is the differentiation
+effect described above — his completions mirror the field's most common
+cores, so his top-1% rate is elite but his beat-the-whole-field rate is not.
+Taking a pick-12-surviving QB at pick 1 is still a value leak in practice:
+the same QB is available at your next pick, so the comparison you actually
+face at pick 1 is "Gibbs plus Goff at 12" versus "Goff plus the RB leftovers
+at 12" — the guided drafts below show the engine never spends pick 1 on a QB
+when it controls the whole draft.
 
 ## Model-guided drafts (one per seat; opponents = calibrated field policy)
 
 | seat (picks) | roster |
 |---|---|
-| 0 (1,12,13,24,25,36) | Amon-Ra St. Brown, Omarion Hampton, Ashton Jeanty, Sam LaPorta, Caleb Williams, Luther Burden |
-| 1 (2,11,14,23,26,35) | Amon-Ra St. Brown, Chris Olave, Ashton Jeanty, Sam LaPorta, Breece Hall, Jared Goff |
-| 2 (3,10,15,22,27,34) | Jahmyr Gibbs, Joe Burrow, Zay Flowers, Tee Higgins, Ashton Jeanty, Michael Mayer |
-| 3 (4,9,16,21,28,33) | Amon-Ra St. Brown, Jonathan Taylor, Sam LaPorta, Ashton Jeanty, Trevor Lawrence, Parker Washington |
-| 4 (5,8,17,20,29,32) | Amon-Ra St. Brown, Jonathan Taylor, Sam LaPorta, Jared Goff, Breece Hall, Garrett Wilson |
-| 5 (6,7,18,19,30,31) | Derrick Henry, Chris Olave, Ashton Jeanty, Sam LaPorta, Jared Goff, Jameson Williams |
+| 0 (1,12,13,24,25,36) | Jahmyr Gibbs, Joe Burrow, Ashton Jeanty, Tetairoa McMillan, Emeka Egbuka, Juwan Johnson |
+| 1 (2,11,14,23,26,35) | Amon-Ra St. Brown, Chris Olave, Ashton Jeanty, Tyler Shough, David Montgomery, Michael Mayer |
+| 2 (3,10,15,22,27,34) | Jahmyr Gibbs, Jared Goff, Travis Etienne Jr., Garrett Wilson, Jameson Williams, Juwan Johnson |
+| 3 (4,9,16,21,28,33) | Amon-Ra St. Brown, Jonathan Taylor, Sam LaPorta, Trevor Lawrence, Breece Hall, Parker Washington |
+| 4 (5,8,17,20,29,32) | Chris Olave, Nico Collins, Ashton Jeanty, Breece Hall, Juwan Johnson, Tyler Shough |
+| 5 (6,7,18,19,30,31) | Chris Olave, Derrick Henry, Omarion Hampton, Justin Herbert, Tetairoa McMillan, Michael Mayer |
 
-Recurring structure: elite WR/RB early → Jeanty + LaPorta as the value core →
-QB in rounds 4–6 (Goff/Lawrence/Caleb tier), often completing a Detroit or
-Cincinnati game stack. Seat 2 shows the turn-oriented Bengals build (Burrow at
-the wheel + Flowers bring-back + Higgins).
+Recurring structure: elite RB/WR chalk early → Jeanty (and often LaPorta) as
+the value core → a low-owned QB in rounds 4–6, frequently completing a game
+environment (Gibbs+Burrow bring-back; Goff+Jamo Detroit stack; Olave+Shough+
+Juwan Johnson is the unowned Saints side of the DET–NO game; Lawrence+Parker
+Washington the Jacksonville stack). Note the DET–NO game appears in some form
+in five of six builds — the model wants that environment, from either side.
 
 ## Simulated field (what you're playing against)
 
@@ -91,7 +112,7 @@ the wheel + Flowers bring-back + Higgins).
 - Stack ownership runs 1.8–2.5× independence for the chalk QB stacks
   (Hurts+Smith 5.9% of entries, Chase+Burrow 5.8%, Flowers+Lamar 5.7%) —
   calibrated against real 2023–2024 fields.
-- Entry-score distribution: median 84, p99 134, sampled-field max ≈159
+- Entry-score distribution: median 84, p99 132, sampled-field max ≈156
   (extrapolates to ≈165–175 at 70k entries; real winning scores at this size
   ran 125–185, median ≈150).
 
