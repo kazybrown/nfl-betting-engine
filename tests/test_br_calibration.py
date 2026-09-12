@@ -89,3 +89,64 @@ def test_fisher_shrink_behavior():
     # Tiny samples collapse to the prior; huge samples keep the estimate.
     assert fisher_shrink(0.9, 5, 0.1) == pytest.approx(0.1, abs=0.02)
     assert fisher_shrink(0.5, 100_000, 0.0) == pytest.approx(0.5, abs=0.01)
+
+
+def test_lines_from_frame_implied_totals():
+    from battle_royale.external import lines_from_frame
+
+    games = pd.DataFrame(
+        [
+            {"season": 2026, "week": 1, "home_team": "DET", "away_team": "NO",
+             "spread_line": 7.0, "total_line": 49.5},
+            {"season": 2026, "week": 1, "home_team": "CAR", "away_team": "CHI",
+             "spread_line": -3.0, "total_line": 47.5},
+            {"season": 2026, "week": 2, "home_team": "LA", "away_team": "WSH",
+             "spread_line": 1.0, "total_line": 40.0},
+        ]
+    )
+    lines = lines_from_frame(games, 2026, 1)
+    assert lines["DET"]["implied"] == pytest.approx(28.2, abs=0.1)
+    assert lines["NO"]["implied"] == pytest.approx(21.2, abs=0.1)
+    assert lines["CHI"]["implied"] > lines["CAR"]["implied"]  # road favorite
+    assert "LAR" not in lines  # week 2 filtered out
+    lines2 = lines_from_frame(games, 2026, 2)
+    assert "LAR" in lines2 and "WAS" in lines2  # aliases normalized
+
+
+def test_status_from_frames_precedence():
+    from battle_royale.external import status_from_frames
+
+    inj = pd.DataFrame(
+        [
+            {"week": 1, "full_name": "Some Guy", "team": "DET", "report_status": "Questionable"},
+            {"week": 1, "full_name": "Hurt Man", "team": "NO", "report_status": "Out"},
+            {"week": 2, "full_name": "Future Case", "team": "NO", "report_status": "Out"},
+        ]
+    )
+    ros = pd.DataFrame(
+        [
+            {"week": 1, "full_name": "Some Guy", "team": "DET", "status": "ACT"},
+            {"week": 1, "full_name": "Stashed Vet", "team": "CHI", "status": "RES"},
+        ]
+    )
+    status = status_from_frames(inj, ros, week=1)
+    assert status[("some guy", "DET")] == "Q"
+    assert status[("hurt man", "NO")] == "O"
+    assert status[("stashed vet", "CHI")] == "IR"
+    assert ("future case", "NO") not in status
+
+
+def test_game_env_scales_correlations():
+    from battle_royale.correlation import CorrelationModel
+    from tests.test_battle_royale import synthetic_slate
+
+    slate = synthetic_slate()
+    base = CorrelationModel.from_slate(slate)
+    env = {t: (1.15 if t in ("T0", "T1") else 0.9) for t in set(slate.teams)}
+    tilted = CorrelationModel.from_slate(slate, team_env=env)
+    qb = slate.name_to_idx["T0 QB1"]
+    wr = slate.name_to_idx["T0 WR1"]
+    lo_qb = slate.name_to_idx["T4 QB1"]
+    lo_wr = slate.name_to_idx["T4 WR1"]
+    assert tilted.matrix[qb, wr] > base.matrix[qb, wr]
+    assert tilted.matrix[lo_qb, lo_wr] < base.matrix[lo_qb, lo_wr]

@@ -23,10 +23,22 @@ class BattleRoyaleEngine:
         correlation: CorrelationModel | None = None,
         policy: OpponentPolicy | None = None,
         seed: int | None = None,
+        game_lines: dict[str, dict] | None = None,
     ):
+        """``game_lines`` (from :func:`battle_royale.external.load_game_lines`)
+        tilts same-game correlations by each game's Vegas total and is kept on
+        the engine for downstream display."""
         self.slate = slate
+        self.game_lines = game_lines or {}
         self.marginals = marginals or MarginalModel.from_slate(slate)
-        self.correlation = correlation or CorrelationModel.from_slate(slate)
+        if correlation is None:
+            team_env = None
+            if self.game_lines:
+                from .external import game_total_multipliers
+
+                team_env = game_total_multipliers(slate, self.game_lines)
+            correlation = CorrelationModel.from_slate(slate, team_env=team_env)
+        self.correlation = correlation
         self.policy = policy or OpponentPolicy(slate)
         self.rng = np.random.default_rng(seed)
 

@@ -96,7 +96,15 @@ class CorrelationModel:
         slate: Slate,
         table_path: str | Path | None = None,
         use_etr_lift: bool = True,
+        team_env: dict[str, float] | None = None,
     ) -> CorrelationModel:
+        """Build the latent correlation matrix for a slate.
+
+        ``team_env`` optionally scales every same-game pair by a per-team
+        multiplier (both teams of a game share it) — used to tilt game
+        environments by Vegas totals. Multipliers are expected to be modest
+        (~0.85-1.18); values are re-clipped to RHO_CLIP afterward.
+        """
         table = _load_table(table_path)
         same_team = {k: _rho_from_entry(v) for k, v in table["same_team"].items()}
         opp_team = {k: _rho_from_entry(v) for k, v in table["opp_team"].items()}
@@ -125,6 +133,8 @@ class CorrelationModel:
                     ):
                         skill = j if pos_names[j] != "QB" else i
                         rho *= _etr_lift(slate, skill, opposing=True)
+                if team_env:
+                    rho *= team_env.get(str(slate.teams[i]), 1.0)
                 c[i, j] = c[j, i] = float(np.clip(rho, *RHO_CLIP))
 
         c = _nearest_psd_correlation(c)

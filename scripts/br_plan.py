@@ -152,9 +152,27 @@ def main() -> None:
     ap.add_argument("--avail-boards", type=int, default=250)
     ap.add_argument("--contest-size", type=int, default=70_000)
     ap.add_argument("--seed", type=int, default=20260912)
+    ap.add_argument("--season", type=int, default=None, help="fetch Vegas lines + player status")
+    ap.add_argument("--week", type=int, default=None)
     args = ap.parse_args()
 
-    engine = BattleRoyaleEngine.from_csv(args.csv, seed=args.seed)
+    from battle_royale.external import load_game_lines, load_player_status, slate_status
+    from battle_royale.slate import Slate
+
+    lines, statuses = {}, {}
+    slate_obj = Slate.from_csv(args.csv)
+    if args.season and args.week:
+        lines = load_game_lines(args.season, args.week)
+        statuses = slate_status(slate_obj, load_player_status(args.season, args.week))
+        print(f"lines for {sum(1 for t in set(slate_obj.teams) if t in lines)} slate teams; "
+              f"{len(statuses)} players with status flags")
+        # Out/rostered-off players should not be targeted by the simulated
+        # field: their room-drafted rate predates the news.
+        for i, code in statuses.items():
+            if code in ("O", "IR"):
+                slate_obj.room_drafted_rate[i] = min(slate_obj.room_drafted_rate[i], 0.01)
+
+    engine = BattleRoyaleEngine(slate_obj, seed=args.seed, game_lines=lines)
     # Offline generation: fast rollout counts, but full-size outcome sims and
     # fields — the jackpot region is too noisy under the live-draft preset,
     # and the heavy artifacts are disk-cached anyway.
@@ -198,6 +216,9 @@ def main() -> None:
                 "adp": p.adp,
                 "own": round(p.room_drafted_rate, 3),
                 "value": round(float(opt.values[i]), 2),
+                **({"ou": lines[p.team]["total"], "itt": lines[p.team]["implied"]}
+                   if p.team in lines else {}),
+                **({"inj": statuses[i]} if i in statuses else {}),
             }
             for i, p in enumerate(s.players)
         ],
