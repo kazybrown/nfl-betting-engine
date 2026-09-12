@@ -368,5 +368,9 @@ def test_match_player(slate):
     assert slate.players[match_player(slate, "T3 TE2")].name == "T3 TE2"
     with pytest.raises(KeyError):
         match_player(slate, "nobody at all")
-    with pytest.raises(KeyError):
-        match_player(slate, "QB1")  # ambiguous across teams
+    # Ambiguous partials resolve to the best (lowest) ADP, draft-style.
+    ambiguous = match_player(slate, "QB1")
+    assert slate.players[ambiguous].position == "QB"
+    assert slate.adp[ambiguous] == min(
+        slate.adp[i] for i, p in enumerate(slate.players) if "QB1" in p.name
+    )

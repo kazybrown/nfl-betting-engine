@@ -31,25 +31,45 @@ from .slate import Slate
 
 
 def match_player(slate: Slate, text: str) -> int:
-    """Resolve a (possibly partial, case-insensitive) name to a player index."""
+    """Resolve a (possibly partial, case-insensitive) name to a player index.
+
+    Tiers: exact full name, then exact last-name token, then any-word prefix,
+    then substring. Within a tier, ties break to the better (lower) ADP —
+    during a draft, "chase" means Ja'Marr Chase, not Chase Brown. Raises only
+    when nothing matches at all.
+    """
     t = text.strip().lower()
-    exact = [i for i, p in enumerate(slate.players) if p.name.lower() == t]
-    if exact:
-        return exact[0]
-    hits = [i for i, p in enumerate(slate.players) if t in p.name.lower()]
-    if len(hits) == 1:
-        return hits[0]
-    if not hits:
-        raise KeyError(f"no player matches {text!r}")
-    names = ", ".join(slate.players[i].name for i in hits[:6])
-    raise KeyError(f"ambiguous name {text!r}: {names}")
+    if not t:
+        raise KeyError("empty player name")
+
+    def _tokens(name: str) -> list[str]:
+        return name.lower().replace(".", " ").replace("'", "").split()
+
+    q = t.replace(".", " ").replace("'", "")
+    tiers: list[list[int]] = [[], [], [], []]
+    for i, p in enumerate(slate.players):
+        name = p.name.lower()
+        toks = _tokens(p.name)
+        if name == t or " ".join(toks) == q:
+            tiers[0].append(i)
+        elif toks and toks[-1] == q:
+            tiers[1].append(i)
+        elif any(tok.startswith(q) for tok in toks) or " ".join(toks).startswith(q):
+            tiers[2].append(i)
+        elif q in " ".join(toks) or t in name:
+            tiers[3].append(i)
+    for tier in tiers:
+        if tier:
+            return min(tier, key=lambda i: slate.adp[i])
+    raise KeyError(f"no player matches {text!r}")
 
 
 def format_options(rec: dict, limit: int = 10) -> str:
     lines = []
     mode = rec["mode"]
     header = (
-        f"pick {rec['pick']} (seat {rec['seat']}, next own pick: {rec['next_own_pick']})"
+        f"pick {rec['pick']} (drafter {rec['seat'] + 1}/6, "
+        f"next own pick: {rec['next_own_pick']})"
         f" — {'JOINT PAIR' if mode == 'pair' else 'single pick'}"
     )
     lines.append(header)

@@ -25,11 +25,12 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from . import cache as _cache
 from .constants import POSITIONS
 from .draft import DraftState
 from .engine import BattleRoyaleEngine
 from .equity import TournamentModel
-from .field import FieldAnalytics, generate_field
+from .field import FieldAnalytics, RosterIndex, generate_field
 from .slate import Slate
 
 
@@ -53,6 +54,11 @@ class OptimizerConfig:
     pair_top_k: int = 8
     equity_chunk: int = 250
     seed: int = 20260912
+    # Directory for on-disk caching of the reference field, duplication index
+    # and outcome-sim matrix (None disables). Keys include content hashes of
+    # the slate, policy parameters and fitted tables, so a new rankings CSV or
+    # recalibration invalidates automatically.
+    cache_dir: str | None = None
 
     @classmethod
     def fast(cls) -> OptimizerConfig:
@@ -82,10 +88,32 @@ class PickOptimizer:
         self._rng = np.random.default_rng(self.config.seed)
         self._field: np.ndarray | None = None
         self._analytics: FieldAnalytics | None = None
-        self._dup_analytics: FieldAnalytics | None = None
+        self._dup_index: RosterIndex | FieldAnalytics | None = None
         self._values: np.ndarray | None = None
         self._cov: np.ndarray | None = None
         self._scores_cache: np.ndarray | None = None
+        s = self.slate
+        self._slate_hash = _cache.array_hash(
+            s.proj, s.adp, s.room_drafted_rate, s.ceiling, s.pos.astype(np.int8)
+        ) + _cache.text_hash([p.name for p in s.players])
+        p = self.engine.policy
+        self._policy_hash = _cache.text_hash(p.adp_sigma, p.choice_noise, p.stack_scale)
+
+    def _cached(self, key: str, build):
+        """Build-or-load a slate-level artifact through the disk cache."""
+        if self.config.cache_dir is None:
+            return build()
+        hit = _cache.load(self.config.cache_dir, key)
+        if hit is not None:
+            return hit
+        obj = build()
+        _cache.save(self.config.cache_dir, key, obj)
+        return obj
+
+    def warm(self) -> None:
+        """Precompute (and cache) everything a live draft needs."""
+        _ = self.values, self.cov, self.field, self.dup_index
+        self._outcome_scores()
 
     # ------------------------------------------------------------------
     # Cached slate-level artifacts
@@ -111,9 +139,17 @@ class PickOptimizer:
     @property
     def field(self) -> np.ndarray:
         if self._field is None:
-            rng = np.random.default_rng(self.config.seed + 1)
-            self._field = generate_field(
-                self.engine.policy, self.config.eval_field_entries, rng
+            key = (
+                f"field_{self._slate_hash}_{self._policy_hash}"
+                f"_{self.config.eval_field_entries}_{self.config.seed}"
+            )
+            self._field = self._cached(
+                key,
+                lambda: generate_field(
+                    self.engine.policy,
+                    self.config.eval_field_entries,
+                    np.random.default_rng(self.config.seed + 1),
+                ),
             )
         return self._field
 
@@ -125,25 +161,41 @@ class PickOptimizer:
 
     def _outcome_scores(self) -> np.ndarray:
         """Outcome sims shared by every recommend() call (fixed seed, cached)."""
-        if getattr(self, "_scores_cache", None) is None:
-            self._scores_cache = self.engine.sample_scores(
-                self.config.n_outcome_sims, np.random.default_rng(self.config.seed + 999)
+        if self._scores_cache is None:
+            m, c = self.engine.marginals, self.engine.correlation
+            key = (
+                f"scores_{_cache.array_hash(m.shape, m.scale, c.cholesky)}"
+                f"_{self.config.n_outcome_sims}_{self.config.seed}"
+            )
+            self._scores_cache = self._cached(
+                key,
+                lambda: self.engine.sample_scores(
+                    self.config.n_outcome_sims, np.random.default_rng(self.config.seed + 999)
+                ),
             )
         return self._scores_cache
 
     @property
-    def dup_analytics(self) -> FieldAnalytics:
-        """Duplication reference: a larger field, built once, for copy counts."""
-        if self._dup_analytics is None:
+    def dup_index(self) -> RosterIndex | FieldAnalytics:
+        """Duplication reference: a larger field, built once, copy counts only."""
+        if self._dup_index is None:
             n = self.config.dup_field_entries
             if n <= self.config.eval_field_entries:
-                self._dup_analytics = self.analytics
+                self._dup_index = self.analytics
             else:
-                rng = np.random.default_rng(self.config.seed + 2)
-                self._dup_analytics = FieldAnalytics(
-                    self.slate, generate_field(self.engine.policy, n, rng)
+                key = (
+                    f"dup_{self._slate_hash}_{self._policy_hash}"
+                    f"_{n}_{self.config.seed}"
                 )
-        return self._dup_analytics
+                self._dup_index = self._cached(
+                    key,
+                    lambda: RosterIndex(
+                        generate_field(
+                            self.engine.policy, n, np.random.default_rng(self.config.seed + 2)
+                        )
+                    ),
+                )
+        return self._dup_index
 
     # ------------------------------------------------------------------
     # Completion policy for our own future picks inside rollouts
@@ -270,7 +322,7 @@ class PickOptimizer:
         flat = completed.reshape(-1, 6)
         keys = np.sort(flat, axis=1)
         uniq, inverse = np.unique(keys, axis=0, return_inverse=True)
-        dup_ref = self.dup_analytics
+        dup_ref = self.dup_index
         dup_counts = dup_ref.roster_copies(uniq)
         scores = self._outcome_scores()
         metrics = self.tournament.evaluate_rosters(

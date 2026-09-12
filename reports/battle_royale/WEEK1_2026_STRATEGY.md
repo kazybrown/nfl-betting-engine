@@ -1,8 +1,8 @@
-# Battle Royale — Week 2, 2026 draft strategy
+# Battle Royale — Week 1, 2026 draft strategy
 
-Model outputs from `scripts/br_week_report.py` on the Week 2 rankings/simulations
-export (150 players, 12 games). Contest modeled at 70,000 entries (real 2024
-Week 2 had 67,986). Full machine-readable detail: `week_report.json`.
+Model outputs from `scripts/br_week_report.py` on the Week 1 rankings/simulations
+export (150 players, 12 games). Contest modeled at 70,000 entries (the
+comparable real 2024 week had 67,986). Full machine-readable detail: `week_report.json`.
 
 ## The one-paragraph version
 
@@ -119,7 +119,7 @@ in five of six builds — the model wants that environment, from either side.
 ## Caveats
 
 - Equity numbers use a generic top-heavy payout curve
-  (`battle_royale/equity.py:DEFAULT_CURVE_POINTS`); swap in the actual Week 2
+  (`battle_royale/equity.py:DEFAULT_CURVE_POINTS`); swap in the actual weekly contest
   structure for exact dollar EVs. Rankings are insensitive to reasonable
   curve choices; absolute equity multiples are not.
 - The model anchors means to the slate projections; it does not re-project

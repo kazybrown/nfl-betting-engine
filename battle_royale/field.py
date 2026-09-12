@@ -36,6 +36,28 @@ def generate_field(
     return out[:n_entries]
 
 
+class RosterIndex:
+    """Exact-roster copy counts only — the light duplication reference.
+
+    Unlike :class:`FieldAnalytics`, this skips pair/triple counting, so it is
+    cheap to build over the large field used for duplicate payout sharing and
+    small enough to cache on disk.
+    """
+
+    def __init__(self, field: np.ndarray):
+        field = np.asarray(field, dtype=np.int64)
+        self.n_entries = len(field)
+        self.roster_counts: Counter = Counter(
+            tuple(sorted(int(x) for x in row)) for row in field
+        )
+
+    def roster_copies(self, rosters: np.ndarray) -> np.ndarray:
+        out = np.zeros(len(rosters), dtype=np.int64)
+        for k, row in enumerate(np.asarray(rosters, dtype=np.int64)):
+            out[k] = self.roster_counts.get(tuple(sorted(int(x) for x in row)), 0)
+        return out
+
+
 class FieldAnalytics:
     """Exact marginal / pair / triple / full-roster counts for a field."""
 
