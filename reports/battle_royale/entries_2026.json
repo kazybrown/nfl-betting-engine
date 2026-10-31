@@ -26,5 +26,34 @@
    "exact_copies_in_sim_7500": 0
   },
   "notes": "Pickens Questionable (sit-risk priced at 22%); graded 2026-10-31 pre-lock."
+ },
+ {
+  "week": 8,
+  "season": 2026,
+  "contest": "the_hurry_up",
+  "entry_fee_usd": 3.0,
+  "roster": [
+   "Puka Nacua",
+   "Zay Flowers",
+   "Brock Bowers",
+   "Lamar Jackson",
+   "Chase Brown",
+   "Michael Wilson"
+  ],
+  "construction": "QB1/RB1/WR3/TE1",
+  "stacks": "BAL double (Jackson+Flowers) vs BUF (O/U 54.5); rest diversified singletons",
+  "model_grade": {
+   "expected_payout_x": 1.44,
+   "expected_payout_usd": 4.33,
+   "field_avg_after_rake_x": 0.889,
+   "p_top_10pct": 0.128,
+   "p_top_1pct": 0.017,
+   "p_top_0_1pct": 0.0024,
+   "mean_score": 94.0,
+   "p99_score": 157.5,
+   "exact_copies_in_sim_7500": 0,
+   "overlap_with_entry_1": 0
+  },
+  "notes": "Graded 2026-10-31 pre-lock."
  }
 ]

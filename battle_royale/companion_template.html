@@ -259,6 +259,9 @@ try { S = JSON.parse(localStorage.getItem("br-companion") || "null"); } catch (e
 
 // Completed-entry log (per week): your own finished rosters, so later drafts
 // can warn before you near-duplicate yourself — self-copies share prizes.
+// PRIOR_ENTRIES ride inside the page (baked at build time from the repo's
+// entry log), so the guard works even when the phone evicts local storage.
+const PRIOR_ENTRIES = PLAN.prior_entries || [];
 const WEEK_KEY = (PLAN.payouts || "") + "|" + P.length + "|" + (P[0] ? P[0].name : "");
 function loadEntries() {
   try { return JSON.parse(localStorage.getItem("br-entries") || "[]"); } catch (e) { return []; }
@@ -349,8 +352,10 @@ function render() {
     $("done").hidden = false;
     $("finalroster").innerHTML = roster.map(i =>
       `<span class="chip">${P[i].name} <i>${P[i].pos}·${P[i].team}</i></span>`).join("");
-    const nLogged = logEntry(roster.map(i => P[i].name))
-      .filter(e => e.week === WEEK_KEY).length;
+    const sig = ns => ns.slice().sort().join("|");
+    const local = logEntry(roster.map(i => P[i].name))
+      .filter(e => e.week === WEEK_KEY).map(e => sig(e.names));
+    const nLogged = new Set(PRIOR_ENTRIES.map(sig).concat(local)).size;
     $("done").querySelector(".sub").textContent =
       `Entry logged (${nLogged} this week — self-dup guard active in your next draft). ` +
       `Send these six names back to Claude to log and grade the entry.`;
@@ -384,8 +389,8 @@ function render() {
   const runsOn = Object.keys(runShift).filter(p => runShift[p] >= 2.4);
   // Self-duplication guard: penalize candidates that would push this roster
   // toward a copy of an entry you already finished this week.
-  const myEntries = loadEntries().filter(e => e.week === WEEK_KEY)
-    .map(e => new Set(e.names));
+  const myEntries = PRIOR_ENTRIES.map(ns => new Set(ns)).concat(
+    loadEntries().filter(e => e.week === WEEK_KEY).map(e => new Set(e.names)));
   const rosterNames = roster.map(i => P[i].name);
   // Ranking = optimal construction GIVEN THE ROSTER SO FAR, with two
   // overrides: dropped values and high positive correlation.
