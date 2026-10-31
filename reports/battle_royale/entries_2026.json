@@ -1,0 +1,30 @@
+[
+ {
+  "week": 8,
+  "season": 2026,
+  "contest": "the_hurry_up",
+  "entry_fee_usd": 3.0,
+  "roster": [
+   "CeeDee Lamb",
+   "Trey McBride",
+   "Drake London",
+   "Kyren Williams",
+   "Dak Prescott",
+   "George Pickens"
+  ],
+  "construction": "QB1/RB1/WR3/TE1",
+  "stacks": "DAL triple onslaught (Prescott+Lamb+Pickens) + McBride bring-back (ARI); DAL/ARI O/U 54.5",
+  "model_grade": {
+   "expected_payout_x": 3.37,
+   "expected_payout_usd": 10.1,
+   "field_avg_after_rake_x": 0.889,
+   "p_top_10pct": 0.186,
+   "p_top_1pct": 0.03,
+   "p_top_0_1pct": 0.0056,
+   "mean_score": 97.1,
+   "p99_score": 165.9,
+   "exact_copies_in_sim_7500": 0
+  },
+  "notes": "Pickens Questionable (sit-risk priced at 22%); graded 2026-10-31 pre-lock."
+ }
+]
