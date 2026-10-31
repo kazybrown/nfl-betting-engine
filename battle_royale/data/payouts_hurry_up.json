@@ -1,0 +1,95 @@
+{
+ "contest": "Underdog NFL The Hurry Up $3 weekly (Sun main slate) - complete in-app table",
+ "season_basis": "2026 week 8, user-provided lobby screenshot (2026-10-31)",
+ "entry_fee_usd": 3.0,
+ "max_entries": 7500,
+ "places_paid": 1300,
+ "total_prizes_usd": 20000,
+ "verified_through_rank": 1300,
+ "source_urls": [
+  "in-app prize breakdown screenshot, 2026-10-31"
+ ],
+ "retrieved": "2026-10-31",
+ "tiers": [
+  {
+   "rank_from": 1,
+   "rank_to": 1,
+   "prize_usd": 2000.0
+  },
+  {
+   "rank_from": 2,
+   "rank_to": 2,
+   "prize_usd": 1000.0
+  },
+  {
+   "rank_from": 3,
+   "rank_to": 3,
+   "prize_usd": 750.0
+  },
+  {
+   "rank_from": 4,
+   "rank_to": 5,
+   "prize_usd": 500.0
+  },
+  {
+   "rank_from": 6,
+   "rank_to": 7,
+   "prize_usd": 300.0
+  },
+  {
+   "rank_from": 8,
+   "rank_to": 9,
+   "prize_usd": 225.0
+  },
+  {
+   "rank_from": 10,
+   "rank_to": 10,
+   "prize_usd": 200.0
+  },
+  {
+   "rank_from": 11,
+   "rank_to": 25,
+   "prize_usd": 100.0
+  },
+  {
+   "rank_from": 26,
+   "rank_to": 50,
+   "prize_usd": 70.0
+  },
+  {
+   "rank_from": 51,
+   "rank_to": 75,
+   "prize_usd": 50.0
+  },
+  {
+   "rank_from": 76,
+   "rank_to": 100,
+   "prize_usd": 40.0
+  },
+  {
+   "rank_from": 101,
+   "rank_to": 125,
+   "prize_usd": 30.0
+  },
+  {
+   "rank_from": 126,
+   "rank_to": 150,
+   "prize_usd": 20.0
+  },
+  {
+   "rank_from": 151,
+   "rank_to": 175,
+   "prize_usd": 10.0
+  },
+  {
+   "rank_from": 176,
+   "rank_to": 300,
+   "prize_usd": 8.0
+  },
+  {
+   "rank_from": 301,
+   "rank_to": 1300,
+   "prize_usd": 6.0
+  }
+ ]
+}

@@ -85,6 +85,13 @@ def lines_from_frame(games: pd.DataFrame, season: int, week: int) -> dict[str, d
                      "implied": round(implied_home, 1)}
         out[away] = {"opp": home, "total": float(total), "spread": -spread,
                      "implied": round(implied_away, 1)}
+    # Slates and feeds disagree on team spellings (LA/LAR, WAS/WSH, JAX/JAC):
+    # publish every alias form too, so lookups succeed from either side.
+    for alias, canon in TEAM_ALIASES.items():
+        if canon in out and alias not in out:
+            out[alias] = out[canon]
+        if alias in out and canon not in out:
+            out[canon] = out[alias]
     return out
 
 

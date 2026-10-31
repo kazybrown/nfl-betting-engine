@@ -18,9 +18,13 @@ archive-verified 2026-09): `battle_royale` (6x6), playoff editions
 (`battle_royale_wild_card` / `_divisional` 6x6, `_conf_championship` 4x6),
 `the_turkey` (4x6 in 2023-24 — confirm the lobby seat count each year),
 `battle_royale_single_game` (3 seats x 4 rounds, NO QBs; flex caps
-unverified — confirm the lobby rules before using). "Hurry Up" is NOT an
-Underdog contest — it was the codename of the user's pre-repo prototype;
-if the user names it, they mean this engine (default Battle Royale). If a
+unverified — confirm the lobby rules before using), and `the_hurry_up`
+(6x6 BR-family $3 Sunday-main-slate weekly, added for 2026;
+lobby-verified 2026-10-31 with a complete prize table — 7,500 cap,
+$20k prizes, 1,300 paid). NOTE: the Sept-2026 research conclusion that
+"Hurry Up" was only a prototype codename was WRONG for the 2026 season —
+the contest is real; the user's pre-repo prototype coincidentally shared
+the name. If a
 format is missing from the registry, add it ONLY with verified structure —
 never guess rounds or roster rules (ask the user for the lobby screenshot).
 Opponent-policy behavioral parameters are calibrated on 6x6 BR archives and
