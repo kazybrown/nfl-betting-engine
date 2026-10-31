@@ -55,5 +55,35 @@
    "overlap_with_entry_1": 0
   },
   "notes": "Graded 2026-10-31 pre-lock."
+ },
+ {
+  "week": 8,
+  "season": 2026,
+  "contest": "the_hurry_up",
+  "entry_fee_usd": 3.0,
+  "roster": [
+   "CeeDee Lamb",
+   "Brock Bowers",
+   "Derrick Henry",
+   "Drake London",
+   "Bhayshul Tuten",
+   "Jacoby Brissett"
+  ],
+  "construction": "QB1/RB2/WR2/TE1",
+  "stacks": "Brissett (ARI, 12% own) opp-QB bring-back with Lamb in the 54.5 DAL/ARI game; rest diversified",
+  "model_grade": {
+   "expected_payout_x": 1.38,
+   "expected_payout_usd": 4.14,
+   "field_avg_after_rake_x": 0.889,
+   "p_top_10pct": 0.125,
+   "p_top_1pct": 0.012,
+   "p_top_0_1pct": 0.0012,
+   "mean_score": 94.2,
+   "p99_score": 147.4,
+   "exact_copies_in_sim_7500": 0,
+   "overlap_e1": 2,
+   "overlap_e2": 1
+  },
+  "notes": "Graded 2026-10-31 pre-lock."
  }
 ]
